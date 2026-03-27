@@ -17,7 +17,7 @@
 
 
 ///////////////////////////////////////
-///global variables (will be extern soon)
+///global variables
 //using extern to prototype.... defined in video_fetch.c
 extern const double fps29;
 extern const double fps59;
