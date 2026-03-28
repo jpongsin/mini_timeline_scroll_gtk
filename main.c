@@ -23,12 +23,9 @@ int main(int argc, char *argv[]) {
     gst_init(&argc, &argv);
     VideoPlayer player = {0};
     /*
-    //test files, will remove shortly
-    const char *videoFile="bbb_sunflower_2160p_60fps_normal.mp4"; //4K 60FPS
-    //const char *videoFile = "hevc_8k60P_bilibili_1.mp4"; //8k 30FPS
-    //const char* videoFile="big_buck_bunny_1080p_h264.mov"; //1080p 24fps
-    //const char* videoFile="OPB Yule Log 2002 (2021 Dec 24) ATSC off-air capture.mp4"; //480p 29,97fps
-    */
+    //for use in IDE
+    const char *videoFile= 'sample.mp4'
+  */
     ////////////////////////////////////////////////
     //check if you entered something.
     if (argc<2) {
