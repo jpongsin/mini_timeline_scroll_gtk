@@ -39,7 +39,7 @@ the application will exit and terminate.
 * Homebrew
 
 #### Instructions:
-If running from the executive
+If running from the executable
 1. Open timeline_scroll_Qt
 2. Open the video
 
