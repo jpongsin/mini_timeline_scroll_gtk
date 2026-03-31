@@ -33,7 +33,6 @@ the application will exit and terminate.
 
 #### Requirements:
 * ffmpeg
-* gtk4
 * gstreamer
 * Qt6
 * Homebrew
