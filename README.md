@@ -6,6 +6,7 @@ as an argument. When you pick the video file, the program
 will check if there is any information
 on the video.
 It then opens a screen.
+This program is written for Linux and MacOS.
 
 The timecode and hotkey labels are shown on the window,
 with the timecode on the bottom of screen
@@ -35,7 +36,7 @@ the application will exit and terminate.
 * gtk4
 * gstreamer
 * Qt6
-* Homebrew (for use in MacOS)
+* Homebrew
 
 #### Instructions:
 If running from the executive
