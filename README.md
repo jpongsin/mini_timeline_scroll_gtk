@@ -42,10 +42,9 @@ If running from the executable
 1. Open timeline_scroll_Qt
 2. Open the video
 
-If running from command line
-1. Type make on the terminal
+If running from command line (Linux only)
+1. Run ./make_timeline_scroll.sh
 2. Type "./timeline_scroll_Qt video_name.mov"
-3. To clean up, run make clean.
 
 
 #### Expected Output:
