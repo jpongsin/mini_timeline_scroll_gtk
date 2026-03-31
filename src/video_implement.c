@@ -305,7 +305,7 @@ void init_idle_pipeline(VideoPlayer *player) {
     GstElement *v_upload = NULL;
     GstElement *v_color = NULL;
 
-    //creates pipeline in accordnace to gpu/cpu
+    //creates pipeline according to gpu/cpu
     if (sink_type == SINK_GL) {
         v_upload = gst_element_factory_make("glupload", "v_upload");
         v_color = gst_element_factory_make("glcolorconvert", "v_color");
