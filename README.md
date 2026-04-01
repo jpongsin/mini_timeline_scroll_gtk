@@ -32,18 +32,20 @@ Fortunately, you can exit the video window, meaning
 the application will exit and terminate.
 
 #### Requirements:
-* ffmpeg
-* gstreamer
-* Qt6
-* Homebrew
+* ffmpeg >= 6
+* gstreamer >= 1.0
+* Qt >= 6.10 
+* Homebrew (MacOS only)
+* CMake >= 4.2
 
 #### Instructions:
-If running from the executable
+If running from the binary executable
 1. Open timeline_scroll_Qt
 2. Open the video
 
 If running from command line (Linux only)
-1. Run ./make_timeline_scroll.sh
+1a. Run ./make_timeline_scroll.sh. 
+1b. Make sure to tick "Executable as Program" in Properties.
 2. Type "./timeline_scroll_Qt video_name.mov"
 
 
