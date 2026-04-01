@@ -38,14 +38,14 @@ the application will exit and terminate.
 * Homebrew (MacOS only)
 * CMake >= 4.2
 
-#### Instructions:
-If running from the binary executable
+#### Instructions: 
+If running from the binary executable 
 1. Open timeline_scroll_Qt
 2. Open the video
 
-If running from command line (Linux only)
-1a. Run ./make_timeline_scroll.sh. 
-1b. Make sure to tick "Executable as Program" in Properties.
+If running from command line (Linux only)\
+1a. Run ./make_timeline_scroll.sh. \
+1b. Make sure to tick "Executable as Program" in Properties.\
 2. Type "./timeline_scroll_Qt video_name.mov"
 
 
