@@ -82,57 +82,92 @@ void change_volume(const VideoPlayer *player, gdouble direction) {
     g_print("\rVolume: %.0f%%", current_vol * 100);
 }
 
-void seek_frames(VideoPlayer *player, gint64 direct_count) {
-    if (!pipeline_is_active(player)) return;
+// Helper for precise H:M:S:F display (used by both)
+void print_seek_label(VideoPlayer *player, gint64 target_ns, gint64 jump) {
+    double fps = player->assignedFPS;
+
+    // obtain seconds, hours, minutes...
+    int total_seconds = (int)(target_ns / GST_SECOND);
+    int h = total_seconds / 3600;
+    int m = (total_seconds / 60) % 60;
+    int s = total_seconds % 60;
+
+    // get frame index
+    gint64 frame_idx = gst_util_uint64_scale(target_ns, (int)(fps * 1000 + 0.5), 1000 * GST_SECOND);
+
+    // check if 29 or 59; range
+    gboolean is_drop = (fps > 29.9 && fps < 30.0) || (fps > 59.9 && fps < 60.0);
+    int f_label;
+
+    if (is_drop) {
+        int drop_val = (fps > 40) ? 4 : 2;
+        int chunk = (fps > 40) ? 35964 : 17982;
+        gint64 D = frame_idx / chunk;
+        gint64 M = frame_idx % chunk;
+        // adjust frame rates for display
+        gint64 adjusted = frame_idx + (18 * (drop_val/2) * D) + drop_val * ((M - drop_val) / 1798);
+        f_label = (int)(adjusted % (int)(fps + 0.5));
+    } else {
+        f_label = (int)(frame_idx % (int)(fps + 0.5));
+    }
+
+    g_print("\r Frame Jump: %ld | Duration: %02d:%02d:%02d%c%02d",
+            (long)jump, h, m, s, is_drop ? ';' : ':', f_label);
+    fflush(stdout);
+}
+
+void seek_mechanism(VideoPlayer *player, gint64 delta) {
+    //if pipeline idling, protect from errors
+    if (!player->pipeline || !player->video_sink) return;
+
+    // assign current position
     gint64 current_pos;
     if (!gst_element_query_position(player->pipeline, GST_FORMAT_TIME, &current_pos)) return;
 
-    double fps = player->assignedFPS;
-    // calculate duration as a double to avoid losing decimals
-    double frame_dur_d = (double)GST_SECOND / fps;
+    // obtain frame rates from sink for accuracy
+    int num = 0, den = 0;
+    GstPad *pad = gst_element_get_static_pad(player->video_sink, "sink");
+    GstCaps *caps = gst_pad_get_current_caps(pad);
+    if (caps) {
+        GstStructure *s = gst_caps_get_structure(caps, 0);
+        gst_structure_get_fraction(s, "framerate", &num, &den);
+        gst_caps_unref(caps);
+    }
+    gst_object_unref(pad);
 
-    // calculate current frame and target frame for accuracy
-    gint64 current_frame = (gint64)round((double)current_pos / frame_dur_d);
-    gint64 target_frame = current_frame + direct_count;
-    if (target_frame < 0) target_frame = 0;
-
-    //from target frame, calculate nanoseconds
-    gint64 target_ns = (gint64)(target_frame * frame_dur_d);
-
-    //assign target frame to display frame
-    gint64 display_frame = target_frame;
-    char separator = ':';
-
-    if (fps > 29.9 && fps < 30.0) {
-        separator = ';';
-        gint64 d = display_frame / 17982;
-        gint64 m = display_frame % 17982;
-        display_frame += (18 * d) + 2 * ((m - 2) / 1798);
-    } else if (fps > 59.9 && fps < 60.0) {
-        separator = ';';
-        gint64 d = display_frame / 35964;
-        gint64 m = display_frame % 35964;
-        display_frame += (36 * d) + 4 * ((m - 4) / 1798);
+    // handle fallback if caps not ready
+    if (num <= 0 || den <= 0) {
+        num = (int)(player->assignedFPS * 1000 + 0.5);
+        den = 1000;
     }
 
-    //format for cli display
-    int fps_int = (int)(fps + 0.5);
-    guint f = (guint)(display_frame % fps_int);
-    guint s = (guint)((display_frame / fps_int) % 60);
-    guint m = (guint)((display_frame / (fps_int * 60)) % 60);
-    guint h = (guint)(display_frame / (fps_int * 3600));
+    //calculate current and target frames
+    gint64 current_f = gst_util_uint64_scale(current_pos, num, den * GST_SECOND);
+    gint64 target_f = current_f + delta;
+    if (target_f < 0) target_f = 0;
 
-    g_print("\r FPS: %.2f | Jump: %ld frames | Seeking to: %02u:%02u:%02u%c%02u",
-            fps, (long)direct_count, h, m, s, separator, f);
-    fflush(stdout);
-    
-    //then, treat the target frame as if it was the beginning and let it run
+    // find the middle of target frame
+    gint64 frame_duration = gst_util_uint64_scale(den, GST_SECOND, num);
+    gint64 target_ns = (target_f * frame_duration) + (frame_duration / 2);
+
+    //checking on CLI
+    print_seek_label(player, target_ns, delta);
+
+    //perform an element seek and make it look like seeking
     gst_element_seek(player->pipeline, 1.0, GST_FORMAT_TIME,
-                     GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
+                     (GstSeekFlags)(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE),
                      GST_SEEK_TYPE_SET, target_ns,
                      GST_SEEK_TYPE_NONE, -1);
 }
 
+
+// derivative of seek_mechanism, for use of seeking by one frame
+void on_key_right(VideoPlayer *p) {
+    seek_mechanism(p, 1);
+}
+void on_key_left(VideoPlayer *p) {
+    seek_mechanism(p, -1);
+}
 
 // check if pipeline is active. check if state is playing, then pause, else: play.
 void toggle_playback(const VideoPlayer *player) {

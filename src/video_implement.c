@@ -178,7 +178,7 @@ void init_video_processor(VideoPlayer *player, const char *path) {
                      "sync", TRUE,
                      "handle-events", FALSE,
                      "async", TRUE,
-                     "max-lateness", (gint64) 2 * GST_SECOND,
+                     "max-lateness", -1,
                      "show-preroll-frame", TRUE, NULL);
         //directly to video_sink osxvideosink as metal handles everything
     } else if (sink_type == SINK_OSX) {

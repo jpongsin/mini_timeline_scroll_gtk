@@ -187,13 +187,13 @@ void VideoWindow::playbackMenu(QMenuBar *menuBar) {
     QAction *forwardAction = playMenu->addAction(tr("Step Forward (10 frames)"));
     forwardAction->setShortcut(QKeySequence(Qt::Key_L));
     connect(forwardAction, &QAction::triggered, [this]() {
-        seek_frames(&player, 10);
+        seek_mechanism(&player, 10);
     });
 
     QAction *backAction = playMenu->addAction(tr("Step Backward (10 frames)"));
     backAction->setShortcut(QKeySequence(Qt::Key_J));
     connect(backAction, &QAction::triggered, [this]() {
-        seek_frames(&player, -10);
+        seek_mechanism(&player, -10);
     });
 
     playMenu->addSeparator();
@@ -274,7 +274,7 @@ void VideoWindow::load_new_video(const QString &fileName) {
     set_video_window(&player, player.window_id);
     gst_element_set_state(player.pipeline, GST_STATE_READY);
 
-     //with handler, allow window to settle before starting playback
+    //with handler, allow window to settle before starting playback
     QTimer::singleShot(150, [this]() {
         start_playback(&player);
         this->setFocus();
@@ -404,11 +404,11 @@ bool handle_hotkeys(QKeyEvent *event, VideoPlayer *player, QWidget *window) {
     switch (key) {
         //step down ten frames
         case Qt::Key_J:
-            seek_frames(player, -10);
+            seek_mechanism(player, -10);
             return true;
             //step up ten frames
         case Qt::Key_L:
-            seek_frames(player, 10);
+            seek_mechanism(player, 10);
             return true;
             //play/pause
         case Qt::Key_K:
@@ -418,11 +418,11 @@ bool handle_hotkeys(QKeyEvent *event, VideoPlayer *player, QWidget *window) {
         }
             //step one down frame
         case Qt::Key_Left:
-            seek_frames(player, -1);
+            on_key_left(player);
             return true;
             //step one up frame
         case Qt::Key_Right:
-            seek_frames(player, 1);
+            on_key_right(player);
             return true;
             //toggle fullscreen mode
         case Qt::Key_F:

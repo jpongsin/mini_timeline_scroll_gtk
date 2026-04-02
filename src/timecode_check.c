@@ -4,61 +4,49 @@
 //See README.md and LICENSE.md for more info
 
 #include "../include/timecode_check.h"
+#include <stdbool.h>
 
 char* update_live_timecode(const VideoPlayer *player) {
-    // guard against uninitialized FPS
-    if (player->assignedFPS <= 0.0) {
-        return g_strdup("00:00:00:00");
-    }
-
     gint64 pos_ns;
     if (!gst_element_query_position(player->pipeline, GST_FORMAT_TIME, &pos_ns))
         return g_strdup("00:00:00:00");
 
-    // get total frame
     double fps = player->assignedFPS;
-    gint64 frame_duration = (gint64)(GST_SECOND / fps);
-     //using pos_ns+100 to ensure consistent frame locking rather than skipping frames: e.g. n = 0,1,2...
-    gint64 total_frames = ((pos_ns+100) + (frame_duration / 2)) / frame_duration;
+    if (fps <= 0) return g_strdup("00:00:00:00");
 
-    int hours, minutes, seconds, frames;
-    gboolean is_drop = FALSE;
-    char separator = ':';
+    // use position number, frame count, and fps*1000
+    gint64 frame_idx = gst_util_uint64_scale(pos_ns, (int)(fps * 1000 + 0.5), 1000 * GST_SECOND);
 
-    //drop frame check
-    if (fps > 29.9 && fps < 30.0) {
-        is_drop = TRUE;
-        separator = ';';
-    } else if (fps > 59.9 && fps < 60.0) {
-        is_drop = TRUE;
-        separator = ';';
-    }
+    // check if 59; check if drop frame range
+    bool is_high_fps = (fps > 50.0);
+    bool is_drop = (fps > 29.9 && fps < 30.0) || (fps > 59.9 && fps < 60.0);
 
-    //set up drop frame calculation for the label
     if (is_drop) {
-        int drop_per_min = (fps > 50) ? 4 : 2;
-        gint64 frames_per_10_min = (fps > 50) ? 35964 : 17982;
+        //check if 59...
+        int drop = is_high_fps ? 4 : 2;
+        // check total frames in 10 minutes
+        gint64 chunk_10m = is_high_fps ? 35964 : 17982;
+        // check total frames in 1 minute
+        gint64 chunk_1m  = is_high_fps ? 3596 : 1798;
 
-        gint64 d = total_frames / frames_per_10_min;
-        gint64 m = total_frames % frames_per_10_min;
+        gint64 D = frame_idx / chunk_10m;
+        gint64 M = frame_idx % chunk_10m;
 
-        // per minute jump
-        if (m >= drop_per_min) {
-            total_frames += (9 * drop_per_min * d) +
-                            (drop_per_min * ((m - drop_per_min) / 1798));
-        }
-        //every 10 minute, no drops
-        else {
-            total_frames += (9 * drop_per_min * d);
+        //drop frames per minute except every 10 minutes
+        if (M >= drop) {
+            frame_idx += (9 * drop * D) + drop * ((M - drop) / chunk_1m);
+        } else {
+            frame_idx += (9 * drop * D);
         }
     }
 
-    //turn frame into timecode
-    int fps_int = (int) (fps + 0.5);
-    frames = (int) (total_frames % fps_int);
-    seconds = (int) ((total_frames / fps_int) % 60);
-    minutes = (int) ((total_frames / (fps_int * 60)) % 60);
-    hours = (int) ((total_frames / (fps_int * 3600)));
+    // prepare for timecode display
+    int fps_int = (int)(fps + 0.5);
+    int f = (int)(frame_idx % fps_int);
+    int s = (int)((frame_idx / fps_int) % 60);
+    int m = (int)((frame_idx / (fps_int * 60)) % 60);
+    int h = (int)(frame_idx / (fps_int * 3600));
 
-    return g_strdup_printf("%02d:%02d:%02d%c%02d", hours, minutes, seconds, separator, frames);
+    char sep = is_drop ? ';' : ':';
+    return g_strdup_printf("%02d:%02d:%02d%c%02d", h, m, s, sep, f);
 }
