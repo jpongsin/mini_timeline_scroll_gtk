@@ -33,6 +33,13 @@ pkg_check_modules(GST REQUIRED IMPORTED_TARGET
         gstreamer-base-1.0
         gstreamer-app-1.0
 )
+find_program(NVIDIA_SMI "nvidia-smi")
+
+if(NVIDIA_SMI)
+    set(NVIDIA_FOUND TRUE)
+    add_definitions(-D__NVIDIA__)
+    message(STATUS "NVIDIA hardware detected on this system")
+endif()
 
 add_executable(mini_timeline_scroll ${EXE_TYPE}
         src/main.cpp
@@ -46,7 +53,9 @@ add_executable(mini_timeline_scroll ${EXE_TYPE}
         src/video_hotkey_actions.c
         include/video_hotkey_actions.h
 )
-
+if(NVIDIA_FOUND)
+    target_compile_definitions(mini_timeline_scroll PRIVATE __NVIDIA__)
+endif()
 target_link_libraries(mini_timeline_scroll PRIVATE
         Qt6::Core
         Qt6::Gui
