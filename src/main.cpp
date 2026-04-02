@@ -13,9 +13,10 @@
 
 #endif
 
+//explicitly prioritize nvidia if there are any
 void boost_nvidia_ranks() {
     GstRegistry *registry = gst_registry_get();
-    // List of NVIDIA hardware decoders to prioritize
+    //check nvidia hardware decoders
     const gchar *nv_decoders[] = { "nvh264dec", "nvh265dec", "nvvp9dec", "nvjpegdec" };
 
     for (int i = 0; i < 4; i++) {
@@ -24,7 +25,7 @@ void boost_nvidia_ranks() {
             // Set rank higher than the default software rank (usually 256)
             gst_plugin_feature_set_rank(GST_PLUGIN_FEATURE(factory), GST_RANK_PRIMARY + 100);
             gst_object_unref(factory);
-            g_print("Boosted rank for: %s\n", nv_decoders[i]);
+            g_print("loaded: %s\n", nv_decoders[i]);
         }
     }
 }
@@ -53,10 +54,6 @@ public:
 
 //main program
 int main(int argc, char *argv[]) {
-#ifdef __NVIDIA__
-    setenv("__NV_PRIME_RENDER_OFFLOAD", "1", 1);
-    setenv("__GLX_VENDOR_LIBRARY_NAME", "nvidia", 1);
-#endif
     gst_init(&argc, &argv);
 #ifdef __NVIDIA__
     boost_nvidia_ranks();
