@@ -1,4 +1,5 @@
 ## mini_timeline_scroll
+![A window opening, with a menu bar, file information and time code sandwiched between a video stream.](https://github.com/jpongsin/mini_timeline_scroll/blob/main/samples/mini_timeline_scroll_1.png)
 
 #### Description:
 This program takes a video file
@@ -48,12 +49,9 @@ If running from command line (Linux only)\
 1b. Make sure to tick "Executable as Program" in Properties.\
 2. Type "./timeline_scroll_Qt video_name.mov"
 
-
-#### Expected Output:
-![A window opening, with a menu bar, file information and time code sandwiched between a video stream.](https://github.com/jpongsin/mini_timeline_scroll/blob/main/samples/mini_timeline_scroll_1.png)
-
 #### Notes:
 * Prototype.
+* If you are using a laptop with mixed graphics (e.g. Intel + NVIDIA), if you want to get the most performance, run "Performance Mode", or prime-run, or add an offload prefix.
 * Maximum streamable file reportedly is 8K 30fps.
 * May not cooperate with high bitrates at all.
 * Limited compatibility with HDR and some select proprietary formats
