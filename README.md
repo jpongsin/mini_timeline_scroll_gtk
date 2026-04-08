@@ -40,7 +40,7 @@ the application will exit and terminate.
 * CMake >= 4.2
 
 #### Instructions: 
-If running from the binary executable 
+If running from the compiled binary executable 
 1. Open timeline_scroll_Qt
 2. Open the video
 
@@ -50,7 +50,7 @@ If running from command line (Linux only)\
 2. Type "./timeline_scroll_Qt video_name.mov"
 
 #### Notes:
-* Prototype.
+* Prototype. It is recommmended to do a fresh build as versions of ffmpeg and its libraries are not backwards compatible. There will be plans for relieving this inconvenience.
 * If you are using a laptop with mixed graphics (e.g. Intel + NVIDIA), if you want to get the most performance, run "Performance Mode", or prime-run, or add an offload prefix.
 * Maximum streamable file reportedly is 8K 30fps.
 * May not cooperate with high bitrates at all.
