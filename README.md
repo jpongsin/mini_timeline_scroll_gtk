@@ -7,7 +7,7 @@ as an argument. When you pick the video file, the program
 will check if there is any information
 on the video.
 It then opens a screen.
-This program is written for Linux and MacOS.
+This program is written for Linux, FreeBSD, and MacOS.
 
 The timecode and hotkey labels are shown on the window,
 with the timecode on the bottom of screen
@@ -47,7 +47,8 @@ the application will exit and terminate.
 5. You may also type "./timeline_scroll_Qt video_name.mov" to open video instantly.
 
 #### Notes:
-* Prototype. It is recommmended to do a fresh build as versions of ffmpeg and its libraries are not backwards compatible. 
+* Prototype. It is recommmended to do a fresh build as versions of ffmpeg and its libraries are not backwards compatible.
+* No support for Wayland as of April 2026. There will be ways to address this
 * If you are using a laptop with mixed graphics (e.g. Intel + NVIDIA), if you want to get the most performance, run "Performance Mode", or prime-run, or add an offload prefix.
 * Maximum streamable file reportedly is 8K 30fps.
 * May not cooperate with high bitrates at all.
