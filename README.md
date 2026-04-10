@@ -48,7 +48,7 @@ the application will exit and terminate.
 
 #### Notes:
 * Prototype. It is recommmended to do a fresh build as versions of ffmpeg and its libraries are not backwards compatible.
-* No support for Wayland as of April 2026. There will be ways to address this
+* No native Wayland support. Limited to Xwayland.
 * If you are using a laptop with mixed graphics (e.g. Intel + NVIDIA), if you want to get the most performance, run "Performance Mode", or prime-run, or add an offload prefix.
 * Maximum streamable file reportedly is 8K 30fps.
 * May not cooperate with high bitrates at all.
