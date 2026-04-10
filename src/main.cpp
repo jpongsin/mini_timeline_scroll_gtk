@@ -54,6 +54,11 @@ public:
 
 //main program
 int main(int argc, char *argv[]) {
+#ifdef __linux__
+  qputenv("QT_QPA_PLATFORM", "xcb");
+  qputenv("GST_GL_WINDOW", "x11");
+  qunsetenv("WAYLAND_DISPLAY");
+#endif
     gst_init(&argc, &argv);
 #ifdef __NVIDIA__
     boost_nvidia_ranks();
