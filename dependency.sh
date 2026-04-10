@@ -20,7 +20,7 @@ case "$OS" in
         sudo apt update
         # FFmpeg & Build Essentials
         sudo apt install -y build-essential cmake pkg-config \
-            libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
+            libxkbcommon-dev libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
         # GStreamer (Base + App + Video)
         sudo apt install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
         # Qt6
