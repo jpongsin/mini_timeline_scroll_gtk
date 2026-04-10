@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 build_folder="build"
 
@@ -11,7 +11,7 @@ mkdir "$build_folder"
 cd "$build_folder"
 
 # Search for the Qt6 configuration file in common areas
-QT_PATH=$(find $HOME /opt -name "Qt6Config.cmake" -print -quit 2>/dev/null | sed 's|/lib/cmake/Qt6/Qt6Config.cmake||')
+QT_PATH=$(find $HOME /opt /usr /usr/local -name "Qt6Config.cmake" -print -quit 2>/dev/null | sed 's|/lib/cmake/Qt6/Qt6Config.cmake||')
 
 if [ -n "$QT_PATH" ]; then
     echo "Found Qt6 at: $QT_PATH"
