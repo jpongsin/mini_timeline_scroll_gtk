@@ -7,7 +7,7 @@ as an argument. When you pick the video file, the program
 will check if there is any information
 on the video.
 It then opens a screen.
-This program is written for Linux, FreeBSD, and MacOS.
+This program is written for Linux (>=6.8), FreeBSD (>=15), and MacOS(>=15).
 
 The timecode and hotkey labels are shown on the window,
 with the timecode on the bottom of screen
