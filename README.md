@@ -40,14 +40,11 @@ the application will exit and terminate.
 * CMake >= 4.2
 
 #### Instructions: 
-If running from the compiled binary executable 
-1. Open timeline_scroll_Qt
-2. Open the video
-
-If running from command line (Linux only)\
-1a. Run ./make_timeline_scroll.sh. \
-1b. Make sure to tick "Executable as Program" in Properties.\
-2. Type "./timeline_scroll_Qt video_name.mov"
+1. Run ./dependency.sh to install dependencies. \
+2. Run ./make_timeline_scroll.sh. \
+3. Go to /build
+4. Click mini_timeline_scroll. Make sure to tick "Executable as Program" in Properties.\
+5. You may also type "./timeline_scroll_Qt video_name.mov" to open video instantly.
 
 #### Notes:
 * Prototype. It is recommmended to do a fresh build as versions of ffmpeg and its libraries are not backwards compatible. There will be plans for relieving this inconvenience.
