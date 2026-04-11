@@ -228,25 +228,27 @@ void init_video_processor(VideoPlayer *player, const char *path) {
     g_object_set(a_res, "quality", 0, NULL);
 
     // make bin from elements in pipeline
+    //setup first for video
+    gst_bin_add_many(GST_BIN(player->pipeline),
+                     src, dbin,
+                     player->video_entry, v_conv,
+                     NULL);
+
+    //check the sink type and adjust accordingly
     if (sink_type == SINK_GL) {
         gst_bin_add_many(GST_BIN(player->pipeline),
-                         src, dbin,
-                         player->video_entry, v_conv, v_upload, v_color, player->video_sink,
-                         player->audio_entry, a_dec_conv, a_conv, a_res,
-                         player->volume_stream, a_sink, NULL);
+                         v_upload, v_color, player->video_sink, NULL);
     } else if (sink_type == SINK_OSX) {
-        gst_bin_add_many(GST_BIN(player->pipeline),
-                         src, dbin,
-                         player->video_entry, v_conv, player->video_sink,
-                         player->audio_entry, a_dec_conv, a_conv, a_res,
-                         player->volume_stream, a_sink, NULL);
+        gst_bin_add(GST_BIN(player->pipeline), player->video_sink);
     } else {
         gst_bin_add_many(GST_BIN(player->pipeline),
-                         src, dbin,
-                         player->video_entry, v_conv, v_out_queue, player->video_sink,
-                         player->audio_entry, a_dec_conv, a_conv, a_res,
-                         player->volume_stream, a_sink, NULL);
+                         v_out_queue, player->video_sink, NULL);
     }
+
+    //for audio and volume
+    gst_bin_add_many(GST_BIN(player->pipeline),
+                     player->audio_entry, a_dec_conv, a_conv,
+                     a_res, player->volume_stream, a_sink, NULL);
 
     // linking chains
     gst_element_link(src, dbin);
