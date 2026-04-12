@@ -1,6 +1,8 @@
-//
-// Created by jop on 4/12/26.
-//
+//mini_timeline_scroll
+//(c) 2026 jpongsin
+//Licensed under MIT License
+//See README.md and LICENSE.md for more info
+
 #include "../include/video_export_actions.h"
 #include "../include/video_window.h"
 #include "../include/video_fetch.h"
