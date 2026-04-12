@@ -1,8 +1,6 @@
-// mini_timeline_scroll
-//(c) 2026 jpongsin
-// Licensed under MIT License
-// See README.md and LICENSE.md for more info
-
+//
+// Created by jop on 4/12/26.
+//
 #include "../include/video_export_actions.h"
 #include "../include/video_window.h"
 #include "../include/video_fetch.h"
@@ -60,6 +58,7 @@ void VideoWindow::load_new_video(const QString &fileName) {
                              .arg(baseName)
                              .arg(player.assignedFPS, 0, 'f', 2)
                              .arg(player.accel_type));
+    closeVideoAction->setEnabled(true);
 
     statusLabel->setStyleSheet(
         "background-color: #333; color: #FFFFFF; padding: 5px;");
@@ -72,6 +71,46 @@ void VideoWindow::load_new_video(const QString &fileName) {
     QTimer::singleShot(150, [this]() {
       start_playback(&player);
       this->setFocus();
+    });
+}
+
+// instructions to load video
+void VideoWindow::close_recent_video() {
+    // check existing pipeline, then destroy it
+    if (player.pipeline) {
+        gst_element_set_state(player.pipeline, GST_STATE_NULL);
+        gst_object_unref(player.pipeline);
+        player.pipeline = nullptr;
+    }
+    // clear uri
+    if (player.uri) {
+        free((void *)player.uri);
+        player.uri = NULL;
+    }
+
+    player.assignedFPS = 0.0;
+
+    audioBox->blockSignals(true);
+    audioBox->clear();
+    audioBox->addItem("No audio streams");
+    audioBox->setEnabled(false);
+    audioBox->blockSignals(false);
+
+    // reset timecode display
+    timecodeLabel->setText("00:00:00:00");
+
+    // reset label
+    statusLabel->setText(QString("No file loaded. Open a video to begin."));
+    statusLabel->setStyleSheet(
+        "background-color: #222; color: #aaa; padding: 5px; font-style: italic;");
+    closeVideoAction->setEnabled(false);
+
+    // with handler, allow window to settle before starting test video
+    init_idle_pipeline(&player);
+    QTimer::singleShot(100, [this]() {
+        set_video_window(&player, player.window_id);
+        gst_element_set_state(player.pipeline, GST_STATE_PLAYING);
+        this->setFocus();
     });
 }
 

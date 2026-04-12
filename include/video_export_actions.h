@@ -1,7 +1,6 @@
-//mini_timeline_scroll
-//(c) 2026 jpongsin
-//Licensed under MIT License
-//See README.md and LICENSE.md for more info
+//
+// Created by jop on 4/12/26.
+//
 
 #ifndef TIMELINE_SCRUB_QT_EXPORT_ACTIONS_H
 #define TIMELINE_SCRUB_QT_EXPORT_ACTIONS_H

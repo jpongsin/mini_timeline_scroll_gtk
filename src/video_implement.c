@@ -294,7 +294,7 @@ void set_video_window(VideoPlayer *player, unsigned long window_id) {
     }
 }
 
-//show black screen
+//show test card
 void init_idle_pipeline(VideoPlayer *player) {
     player->pipeline = gst_pipeline_new("idle-pipeline");
 
@@ -302,9 +302,19 @@ void init_idle_pipeline(VideoPlayer *player) {
     gst_bus_set_sync_handler(bus, bus_sync_handler, player, NULL);
     gst_object_unref(bus);
 
-    //set black screen
+    //set test card
     GstElement *src = gst_element_factory_make("videotestsrc", "src");
-    g_object_set(src, "pattern", 2, NULL);
+    g_object_set(src, "pattern", 25, NULL);
+
+    //try to fit
+    GstElement *capsfilter = gst_element_factory_make("capsfilter", "capsfilter");
+    GstCaps *caps = gst_caps_new_simple("video/x-raw",
+    "width", G_TYPE_INT, 1280,
+    "height", G_TYPE_INT, 720,
+    "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
+    NULL);
+    g_object_set(capsfilter, "caps", caps, NULL);
+    gst_caps_unref(caps);
 
     //detect appropriate sink based on hardware/software
     VideoSinkType sink_type = detect_best_sink();
@@ -336,10 +346,10 @@ void init_idle_pipeline(VideoPlayer *player) {
 
     if (sink_type == SINK_GL) {
         gst_bin_add_many(GST_BIN(player->pipeline),
-                         src, v_upload, v_color, sink, NULL);
-        gst_element_link_many(src, v_upload, v_color, sink, NULL);
+                         src,capsfilter, v_upload, v_color, sink, NULL);
+        gst_element_link_many(src,capsfilter, v_upload, v_color, sink, NULL);
     } else {
-        gst_bin_add_many(GST_BIN(player->pipeline), src, sink, NULL);
-        gst_element_link(src, sink);
+        gst_bin_add_many(GST_BIN(player->pipeline), src,capsfilter, sink, NULL);
+        gst_element_link_many(src, capsfilter,sink,NULL);
     }
 }

@@ -66,6 +66,8 @@ public:
     void probeAudio(AVFormatContext *streamCtx);
 
     void load_new_video(const QString &fileName);
+    void close_recent_video();
+
 
     //screenshot
     void export_screenshot();
@@ -81,6 +83,7 @@ private:
     QLabel *statusLabel;
 
     // qt widgets
+    QAction *closeVideoAction;
     QVBoxLayout *layout;
     VideoSurface *videoSurface;
     QLabel *timecodeLabel;

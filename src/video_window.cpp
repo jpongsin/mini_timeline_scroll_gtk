@@ -147,14 +147,21 @@ VideoWindow::VideoWindow(int argc, char *argv[], QWidget *parent)
 // creates file menu
 void VideoWindow::mainFileMenu(QMenuBar *menuBar) {
   QMenu *fileMenu = menuBar->addMenu(tr("&File"));
-  QAction *openAction = fileMenu->addAction(tr("&Open Video..."));
 
+  QAction *openAction = fileMenu->addAction(tr("&Open Video..."));
   openAction->setShortcut(QKeySequence::Open);
   connect(openAction, &QAction::triggered, this,
           &VideoWindow::open_file_dialog);
 
-  QAction *closeAction = fileMenu->addAction(tr("&Close"));
-  closeAction->setShortcut(QKeySequence::Close);
+  closeVideoAction = fileMenu->addAction(tr("&Close Video"));
+  // disabled until a file is loaded
+  closeVideoAction->setShortcut(QKeySequence::Close);
+  closeVideoAction->setEnabled(false);
+  connect(closeVideoAction, &QAction::triggered, this,
+          &VideoWindow::close_recent_video);
+
+  QAction *closeAction = fileMenu->addAction(tr("&Quit"));
+  closeAction->setShortcut(QKeySequence::Quit);
   connect(closeAction, &QAction::triggered, this, &QWidget::close);
 }
 
