@@ -5,6 +5,12 @@
 
 
 #include "../include/video_implement.h"
+#include "../include/video_fetch.h"
+
+#include <gst/video/videooverlay.h>
+#include <libavutil/imgutils.h>
+
+
 
 #include <stdio.h>
 
@@ -228,13 +234,13 @@ void init_video_processor(VideoPlayer *player, const char *path) {
     g_object_set(a_res, "quality", 0, NULL);
 
     // make bin from elements in pipeline
-    //setup first for video
+    // Always the same — add unconditionally
     gst_bin_add_many(GST_BIN(player->pipeline),
                      src, dbin,
                      player->video_entry, v_conv,
                      NULL);
 
-    //check the sink type and adjust accordingly
+    // Sink-type specific middle elements only
     if (sink_type == SINK_GL) {
         gst_bin_add_many(GST_BIN(player->pipeline),
                          v_upload, v_color, player->video_sink, NULL);
@@ -245,7 +251,7 @@ void init_video_processor(VideoPlayer *player, const char *path) {
                          v_out_queue, player->video_sink, NULL);
     }
 
-    //for audio and volume
+    // Always the same — audio is completely sink-agnostic
     gst_bin_add_many(GST_BIN(player->pipeline),
                      player->audio_entry, a_dec_conv, a_conv,
                      a_res, player->volume_stream, a_sink, NULL);

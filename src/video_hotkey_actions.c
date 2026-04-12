@@ -5,6 +5,10 @@
 
 
 #include "../include/video_hotkey_actions.h"
+#include <gst/gst.h>
+#include <stdio.h>
+#include <gst/video/videooverlay.h>
+
 //reverts back to the beginning of a video
 void seek_begin(const VideoPlayer *player, const gint64 pos_ns) {
     if (!pipeline_is_active(player)) return;
