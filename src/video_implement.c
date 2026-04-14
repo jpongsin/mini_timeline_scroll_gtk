@@ -15,6 +15,7 @@
 #include <stdio.h>
 
 static GstBusSyncReply bus_sync_handler(GstBus *bus, GstMessage *message, gpointer user_data) {
+    (void)bus;
     //make user_data accept VideoPlayer
     VideoPlayer *player = (VideoPlayer *) user_data;
 
@@ -356,4 +357,93 @@ void init_idle_pipeline(VideoPlayer *player) {
         gst_bin_add_many(GST_BIN(player->pipeline), src,capsfilter, sink, NULL);
         gst_element_link_many(src, capsfilter,sink,NULL);
     }
+}
+
+void switch_audio_stream(VideoPlayer *player, int stream_index) {
+    if (!player->pipeline || !player->audio_entry) return;
+
+    GstElement *dbin = gst_bin_get_by_name(GST_BIN(player->pipeline), "dbin");
+    if (!dbin) return;
+
+    // Find the target audio pad on decodebin
+    GstIterator *it = gst_element_iterate_src_pads(dbin);
+    gboolean done = FALSE;
+    GValue item = G_VALUE_INIT;
+    int audio_count = 0;
+    GstPad *target_pad = NULL;
+
+    while (!done) {
+        switch (gst_iterator_next(it, &item)) {
+            case GST_ITERATOR_OK: {
+                GstPad *pad = g_value_get_object(&item);
+                GstCaps *caps = gst_pad_query_caps(pad, NULL);
+                if (caps) {
+                    GstStructure *str = gst_caps_get_structure(caps, 0);
+                    if (g_str_has_prefix(gst_structure_get_name(str), "audio/")) {
+                        if (audio_count == stream_index) {
+                            target_pad = gst_object_ref(pad);
+                        }
+                        audio_count++;
+                    }
+                    gst_caps_unref(caps);
+                }
+                g_value_reset(&item);
+                break;
+            }
+            case GST_ITERATOR_RESYNC:
+                gst_iterator_resync(it);
+                audio_count = 0;
+                if (target_pad) { gst_object_unref(target_pad); target_pad = NULL; }
+                break;
+            case GST_ITERATOR_ERROR:
+            case GST_ITERATOR_DONE:
+                done = TRUE;
+                break;
+        }
+    }
+    gst_iterator_free(it);
+    gst_object_unref(dbin);
+
+    if (!target_pad) return;
+
+    GstPad *sink_pad = gst_element_get_static_pad(player->audio_entry, "sink");
+    if (!sink_pad) {
+        gst_object_unref(target_pad);
+        return;
+    }
+
+    // Check if the target is already active
+    GstPad *old_pad = gst_pad_get_peer(sink_pad);
+    if (old_pad == target_pad) {
+        if (old_pad) gst_object_unref(old_pad);
+        gst_object_unref(target_pad);
+        gst_object_unref(sink_pad);
+        return;
+    }
+
+    // Capture position before changing links to keep playback seamless
+    gint64 pos = 0;
+    gst_element_query_position(player->pipeline, GST_FORMAT_TIME, &pos);
+
+    if (old_pad) {
+        gst_pad_unlink(old_pad, sink_pad);
+        gst_object_unref(old_pad);
+    }
+
+    // Connect the new audio pad
+    gst_pad_link(target_pad, sink_pad);
+
+    GstState state;
+    gst_element_get_state(player->pipeline, &state, NULL, 0);
+
+    // Provide a flushed seek to seamlessly update the audio without destroying the video branch.
+    // If paused, we avoid seeking to prevent a deadlock; GStreamer will organically 
+    // resume playing the new audio track when played.
+    if (state == GST_STATE_PLAYING && pos > 0) {
+        gst_element_seek_simple(player->pipeline, GST_FORMAT_TIME,
+                                (GstSeekFlags)(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT), pos);
+    }
+
+    gst_object_unref(target_pad);
+    gst_object_unref(sink_pad);
 }

@@ -1,367 +1,328 @@
-//mini_timeline_scroll
+// mini_timeline_scroll
 //(c) 2026 jpongsin
-//Licensed under MIT License
-//See README.md and LICENSE.md for more info
+// Licensed under MIT License
+// See README.md and LICENSE.md for more info
 
 #include "../include/video_export_actions.h"
-#include "../include/video_window.h"
 #include "../include/video_fetch.h"
+#include "../include/video_window.h"
 
 // open file dialog
 void VideoWindow::open_file_dialog() {
-    QStringList video_extensions = {"mp4", "mkv", "mov", "avi", "webm", "flv",
-                                    "vob", "ogv", "ogg", "wmv", "mpg",  "mpeg",
-                                    "m4v", "3gp", "3g2", "mxf", "f4v"};
+  QStringList video_extensions = {"mp4", "mkv", "mov", "avi", "webm", "flv",
+                                  "vob", "ogv", "ogg", "wmv", "mpg",  "mpeg",
+                                  "m4v", "3gp", "3g2", "mxf", "f4v"};
 
-    QString filter = "Video Files (";
-    for (const QString &ext : video_extensions) {
-        filter += "*." + ext + " ";
-    }
-    filter += ");;All Files (*)";
+  QString filter = "Video Files (";
+  for (const QString &ext : video_extensions) {
+    filter += "*." + ext + " ";
+  }
+  filter += ");;All Files (*)";
 
-    QString fileName =
-        QFileDialog::getOpenFileName(this, tr("Open Video"), "", filter);
+  QString fileName =
+      QFileDialog::getOpenFileName(this, tr("Open Video"), "", filter);
 
-    if (!fileName.isEmpty()) {
-        load_new_video(fileName);
-    }
+  if (!fileName.isEmpty()) {
+    load_new_video(fileName);
+  }
 }
 // instructions to load video
 void VideoWindow::load_new_video(const QString &fileName) {
-    // check existing pipeline, then destroy it
-    if (player.pipeline) {
-        gst_element_set_state(player.pipeline, GST_STATE_NULL);
-        gst_object_unref(player.pipeline);
-        player.pipeline = nullptr;
+  // check existing pipeline, then destroy it
+  if (player.pipeline) {
+    gst_element_set_state(player.pipeline, GST_STATE_NULL);
+    gst_object_unref(player.pipeline);
+    player.pipeline = nullptr;
+  }
+  // clear uri
+  if (player.uri) {
+    free((void *)player.uri);
+    player.uri = nullptr;
+  }
+
+  // strdup the filename for C compatibility, use new loader API
+  player.uri = strdup(fileName.toUtf8().constData());
+  VideoMediaInfo mediaInfo = load_video_for_qt(player.uri);
+  player.assignedFPS = mediaInfo.fps;
+
+  //stop audio
+  audioBox->blockSignals(true);
+  audioBox->clear();
+  audioBox->setEnabled(false);
+
+  //check if there is an audio track
+  if (mediaInfo.audio_count > 0) {
+    audioBox->setEnabled(true);
+
+    //add an audio track
+    for (int i = 0; i < mediaInfo.audio_count; i++) {
+        audioBox->addItem(QString(mediaInfo.audio_tracks[i].label),
+          QVariant(mediaInfo.audio_tracks[i].index));
     }
-    // clear uri
-    if (player.uri) {
-        free((void *)player.uri);
-        player.uri = NULL;
+
+    if (player.selected_audio_stream >= mediaInfo.audio_count) {
+        player.selected_audio_stream = 0;
     }
 
-    // fetch from ffmpeg
-    player.uri = strdup(fileName.toUtf8().constData());
-    AVFormatContext *forIOContext = nullptr;
-    player.assignedFPS = validateVideo(player.uri, forIOContext, -1);
-    avformat_close_input(&forIOContext);
+    // store the AVStream index as item data
+    audioBox->blockSignals(true);
+    audioBox->setCurrentIndex(player.selected_audio_stream);
+    audioBox->blockSignals(false);
+  } else {
+    //empty audio stream
+    audioBox->addItem("No audio streams");
+    audioBox->setEnabled(false);
+    player.selected_audio_stream = 0;
+  }
 
-    // open audio streams and probe
-    AVFormatContext *streamCtx = nullptr;
-    probeAudio(streamCtx);
+  //audio track ready
+  audioBox->blockSignals(false);
+  
+  // Update the label once the file is ready
+  QFileInfo fileInfo(fileName);
+  QString baseName = fileInfo.fileName();
 
-    // Update the label once the file is ready
-    QFileInfo fileInfo(fileName);
-    QString baseName = fileInfo.fileName();
+  // start up video processor and then label
+  init_video_processor(&player, player.uri);
+  statusLabel->setText(QString("File: %1 | FPS: %2 | Engine: %3")
+                           .arg(baseName)
+                           .arg(player.assignedFPS, 0, 'f', 2)
+                           .arg(player.accel_type));
+  closeVideoAction->setEnabled(true);
 
-    // start up video processor and then label
-    init_video_processor(&player, player.uri);
-    statusLabel->setText(QString("File: %1 | FPS: %2 | Engine: %3")
-                             .arg(baseName)
-                             .arg(player.assignedFPS, 0, 'f', 2)
-                             .arg(player.accel_type));
-    closeVideoAction->setEnabled(true);
+  statusLabel->setStyleSheet(
+      "background-color: #333; color: #FFFFFF; padding: 5px;");
 
-    statusLabel->setStyleSheet(
-        "background-color: #333; color: #FFFFFF; padding: 5px;");
+  // free struct once read by GUI layout
+  free_video_media_info(&mediaInfo);
 
-    // get startup pipeline
-    set_video_window(&player, player.window_id);
-    gst_element_set_state(player.pipeline, GST_STATE_READY);
+  // set startup pipeline
+  set_video_window(&player, player.window_id);
+  gst_element_set_state(player.pipeline, GST_STATE_READY);
 
-    // with handler, allow window to settle before starting playback
-    QTimer::singleShot(150, [this]() {
-      start_playback(&player);
-      this->setFocus();
-    });
+  // with handler, allow window to settle before starting playback
+  QTimer::singleShot(150, [this]() {
+    start_playback(&player);
+    this->setFocus();
+  });
 }
 
 // instructions to load video
 void VideoWindow::close_recent_video() {
-    // check existing pipeline, then destroy it
-    if (player.pipeline) {
-        gst_element_set_state(player.pipeline, GST_STATE_NULL);
-        gst_object_unref(player.pipeline);
-        player.pipeline = nullptr;
-    }
-    // clear uri
-    if (player.uri) {
-        free((void *)player.uri);
-        player.uri = NULL;
-    }
+  // check existing pipeline, then destroy it
+  if (player.pipeline) {
+    gst_element_set_state(player.pipeline, GST_STATE_NULL);
+    gst_object_unref(player.pipeline);
+    player.pipeline = nullptr;
+  }
+  // clear uri
+  if (player.uri) {
+    free((void *)player.uri);
+    player.uri = nullptr;
+  }
 
-    player.assignedFPS = 0.0;
+  player.assignedFPS = 0.0;
 
-    audioBox->blockSignals(true);
-    audioBox->clear();
-    audioBox->addItem("No audio streams");
-    audioBox->setEnabled(false);
-    audioBox->blockSignals(false);
+  audioBox->blockSignals(true);
+  audioBox->clear();
+  audioBox->addItem("No audio streams");
+  audioBox->setEnabled(false);
+  audioBox->blockSignals(false);
 
-    // reset timecode display
-    timecodeLabel->setText("00:00:00:00");
+  // reset timecode display
+  timecodeLabel->setText("00:00:00:00");
 
-    // reset label
-    statusLabel->setText(QString("No file loaded. Open a video to begin."));
-    statusLabel->setStyleSheet(
-        "background-color: #222; color: #aaa; padding: 5px; font-style: italic;");
-    closeVideoAction->setEnabled(false);
+  // reset label
+  statusLabel->setText(QString("No file loaded. Open a video to begin."));
+  statusLabel->setStyleSheet(
+      "background-color: #222; color: #aaa; padding: 5px; font-style: italic;");
+  closeVideoAction->setEnabled(false);
 
-    // with handler, allow window to settle before starting test video
-    init_idle_pipeline(&player);
-    QTimer::singleShot(100, [this]() {
-        set_video_window(&player, player.window_id);
-        gst_element_set_state(player.pipeline, GST_STATE_PLAYING);
-        this->setFocus();
-    });
+  // with handler, allow window to settle before starting test video
+  init_idle_pipeline(&player);
+  QTimer::singleShot(100, [this]() {
+    set_video_window(&player, player.window_id);
+    gst_element_set_state(player.pipeline, GST_STATE_PLAYING);
+    this->setFocus();
+  });
 }
 
-
-void VideoWindow::probeAudio(AVFormatContext *streamCtx) {
-    if (avformat_open_input(&streamCtx, player.uri, NULL, NULL) == 0 &&
-        avformat_find_stream_info(streamCtx, NULL) >= 0) {
-
-        // clear any existing streams
-        audioBox->blockSignals(true);
-        audioBox->clear();
-        audioBox->setEnabled(false);
-
-        int audio_track = 0;
-        for (unsigned int i = 0; i < streamCtx->nb_streams; i++) {
-            if (streamCtx->streams[i]->codecpar->codec_type != AVMEDIA_TYPE_AUDIO)
-                continue;
-
-            AVDictionaryEntry *lang =
-                av_dict_get(streamCtx->streams[i]->metadata, "language", NULL, 0);
-            AVDictionaryEntry *title =
-                av_dict_get(streamCtx->streams[i]->metadata, "title", NULL, 0);
-
-            QString label;
-            if (title && strlen(title->value) > 0)
-                label = QString("%1").arg(title->value);
-            else
-                label = QString("Track %1").arg(audio_track + 1);
-
-            if (lang && strlen(lang->value) > 0)
-                label += QString(" (%1)").arg(lang->value);
-
-            // store the AVStream index as item data
-            // in load_new_video, change the addItem call
-            audioBox->addItem(label, QVariant(audio_track));
-            audio_track++;
-        }
-
-        if (audio_track > 0) {
-            audioBox->setEnabled(true);
-
-            // if previous selection exceeds available tracks, fall back to 0
-            if (player.selected_audio_stream >= audio_track) {
-                player.selected_audio_stream = 0;
-            }
-
-            // restore combobox to match clamped selection
-            audioBox->blockSignals(true);
-            audioBox->setCurrentIndex(player.selected_audio_stream);
-            audioBox->blockSignals(false);
-        } else {
-            // no audio at all
-            audioBox->addItem("No audio streams");
-            audioBox->setEnabled(false);
-            player.selected_audio_stream = 0;
-        }
-        audioBox->blockSignals(false);
-        avformat_close_input(&streamCtx);
-        }
-}
-
-
-//screenshot
+// screenshot
 void VideoWindow::export_screenshot() {
-    //grab frame: determine if video pipeline available
-    //whether playing or pausing, the frame is grabbed
-    GstSample *sample = capture_current_frame(&player);
-    if (!sample) {
-        QMessageBox::warning(this, tr("Screenshot"),
-                             tr("No frame available. Load a video first."));
-        return;
-    }
+  // grab frame: determine if video pipeline available
+  // whether playing or pausing, the frame is grabbed
+  GstSample *sample = capture_current_frame(&player);
+  if (!sample) {
+    QMessageBox::warning(this, tr("Screenshot"),
+                         tr("No frame available. Load a video first."));
+    return;
+  }
 
-    //pick a format
-    //label shown to user, file extension, ffmpeg short name
-    struct ImageFormat {
-        const char *label;
-        const char *ext;
-        const char *ffmpeg_name;
-    };
+  // pick a format
+  // label shown to user, file extension, ffmpeg short name
+  struct ImageFormat {
+    const char *label;
+    const char *ext;
+    const char *ffmpeg_name;
+  };
 
-    static const ImageFormat formats[] = {
-        { "PNG  – Lossless, transparency support",          "png",  "png"   },
-        { "JPEG – Lossy, widely compatible",                "jpg",  "mjpeg" },
-        { "BMP  – Uncompressed bitmap",                     "bmp",  "bmp"   },
-        { "TIFF – Lossless, professional use",              "tiff", "tiff"  },
-        { "WebP – Modern lossy/lossless",                   "webp", "webp"  },
-        { "PPM  – Simple portable pixmap",                  "ppm",  "ppm"   },
-        { "DPX  – Digital cinema / VFX",   "dpx",  "dpx"   },
-        { "EXR  – HDR / VFX",              "exr",  "exr"   },
-    };
-    const int format_count = (int)(sizeof(formats) / sizeof(formats[0]));
+  static const ImageFormat formats[] = {
+      {"PNG  – Lossless, transparency support", "png", "png"},
+      {"JPEG – Lossy, widely compatible", "jpg", "mjpeg"},
+      {"BMP  – Uncompressed bitmap", "bmp", "bmp"},
+      {"TIFF – Lossless, professional use", "tiff", "tiff"},
+      {"WebP – Modern lossy/lossless", "webp", "webp"},
+      {"PPM  – Simple portable pixmap", "ppm", "ppm"},
+      {"DPX  – Digital cinema / VFX", "dpx", "dpx"},
+      {"EXR  – HDR / VFX", "exr", "exr"},
+  };
+  const int format_count = (int)(sizeof(formats) / sizeof(formats[0]));
 
-    QStringList format_labels;
-    for (int i = 0; i < format_count; i++)
-        format_labels << QString(formats[i].label);
+  QStringList format_labels;
+  for (int i = 0; i < format_count; i++)
+    format_labels << QString(formats[i].label);
 
-    bool ok = false;
-    QString chosen_label = QInputDialog::getItem(
-        this,
-        tr("Choose Image Format"),
-        tr("Export format:"),
-        format_labels,
-        0,      // default: PNG
-        false,  // not editable
-        &ok
-    );
+  bool ok = false;
+  QString chosen_label = QInputDialog::getItem(
+      this, tr("Choose Image Format"), tr("Export format:"), format_labels,
+      0,     // default: PNG
+      false, // not editable
+      &ok);
 
-  //disable all keys temporarily,
-  //so keys can be free to navigate OK or cancel.
-  //handled in handle_hotkeys
+  // disable all keys temporarily,
+  // so keys can be free to navigate OK or cancel.
+  // handled in handle_hotkeys
 
-    if (!ok) {
-        gst_sample_unref(sample);
-        g_print("\rScreenshot cancelled.");
-        fflush(stdout);
-        return;
-    }
-
-    const ImageFormat *chosen_fmt = nullptr;
-    for (int i = 0; i < format_count; i++) {
-        if (chosen_label == QString(formats[i].label)) {
-            chosen_fmt = &formats[i];
-            break;
-        }
-    }
-    if (!chosen_fmt) {
-        gst_sample_unref(sample);
-        return;
-    }
-
-    // save dialog
-    QString ext  = QString(chosen_fmt->ext);
-    QString home = QDir::homePath();
-
-    QString default_name = QString("screenshot.") + ext;
-
-    QString filter = QString("%1 Files (*.%2);;All Files (*)")
-                         .arg(ext.toUpper()).arg(ext);
-
-    QString outputPath = QFileDialog::getSaveFileName(
-        this,
-        tr("Save Screenshot"),
-        home + "/" + default_name,
-        filter
-    );
-
-    if (outputPath.isEmpty()) {
-        gst_sample_unref(sample);
-        g_print("\rScreenshot cancelled.");
-        fflush(stdout);
-        return;
-    }
-
-    //extension still has to be present after user deletes
-    if (!outputPath.endsWith("." + ext, Qt::CaseInsensitive))
-        outputPath += "." + ext;
-
-    //call export image function in video_export_actions.c
-    QByteArray pathBytes = outputPath.toUtf8();
-    ExportResult result = write_frame_to_file(
-        sample,
-        pathBytes.constData(),
-        chosen_fmt->ffmpeg_name
-    );
-
+  if (!ok) {
     gst_sample_unref(sample);
+    g_print("\rScreenshot cancelled.");
+    fflush(stdout);
+    return;
+  }
 
-    // show error if not succeeded
-    // else, write_frame_to_file handles completion
-    if (result != EXPORT_OK) {
-        QMessageBox::warning(this, tr("Screenshot"),
-                             tr(export_result_string(result)));
+  const ImageFormat *chosen_fmt = nullptr;
+  for (int i = 0; i < format_count; i++) {
+    if (chosen_label == QString(formats[i].label)) {
+      chosen_fmt = &formats[i];
+      break;
     }
+  }
+  if (!chosen_fmt) {
+    gst_sample_unref(sample);
+    return;
+  }
+
+  // save dialog
+  QString ext = QString(chosen_fmt->ext);
+  QString home = QDir::homePath();
+
+  QString default_name = QString("screenshot.") + ext;
+
+  QString filter =
+      QString("%1 Files (*.%2);;All Files (*)").arg(ext.toUpper()).arg(ext);
+
+  QString outputPath = QFileDialog::getSaveFileName(
+      this, tr("Save Screenshot"), home + "/" + default_name, filter);
+
+  if (outputPath.isEmpty()) {
+    gst_sample_unref(sample);
+    g_print("\rScreenshot cancelled.");
+    fflush(stdout);
+    return;
+  }
+
+  // extension still has to be present after user deletes
+  if (!outputPath.endsWith("." + ext, Qt::CaseInsensitive))
+    outputPath += "." + ext;
+
+  // call export image function in video_export_actions.c
+  QByteArray pathBytes = outputPath.toUtf8();
+  ExportResult result = write_frame_to_file(sample, pathBytes.constData(),
+                                            chosen_fmt->ffmpeg_name);
+
+  gst_sample_unref(sample);
+
+  // show error if not succeeded
+  // else, write_frame_to_file handles completion
+  if (result != EXPORT_OK) {
+    QMessageBox::warning(this, tr("Screenshot"),
+                         tr(export_result_string(result)));
+  }
 }
 
 // force gstreamer overlay to fill the canvas after certain actions
 void VideoWindow::refreshVideoRect() {
-    if (player.video_sink && videoSurface) {
-        gst_video_overlay_set_render_rectangle(GST_VIDEO_OVERLAY(player.video_sink),
-                                               0, 0, videoSurface->width(),
-                                               videoSurface->height());
-        gst_video_overlay_expose(GST_VIDEO_OVERLAY(player.video_sink));
-    }
+  if (player.video_sink && videoSurface) {
+    gst_video_overlay_set_render_rectangle(GST_VIDEO_OVERLAY(player.video_sink),
+                                           0, 0, videoSurface->width(),
+                                           videoSurface->height());
+    gst_video_overlay_expose(GST_VIDEO_OVERLAY(player.video_sink));
+  }
 }
 
 // windowed fullscreen
 void VideoWindow::toggleFullscreen() {
-    if (!isFullscreenActive) {
-        isFullscreenActive = true;
-        showFullScreen();
-        // give Qt one event loop tick to finish resizing the window
-        // before telling GStreamer the new rectangle
-        QTimer::singleShot(50, [this]() { refreshVideoRect(); });
-        g_print("\rFullscreen on\n");
-    } else {
-        isFullscreenActive = false;
-        // if immersive was active, exit that too so controls reappear
-        if (isAutohideActive) {
-            isAutohideActive = false;
-            hideTimer->stop();
-        }
-        showUI();
-        showNormal();
-        QTimer::singleShot(50, [this]() { refreshVideoRect(); });
-        g_print("\rFullscreen off\n");
+  if (!isFullscreenActive) {
+    isFullscreenActive = true;
+    showFullScreen();
+    // give Qt one event loop tick to finish resizing the window
+    // before telling GStreamer the new rectangle
+    QTimer::singleShot(50, [this]() { refreshVideoRect(); });
+    g_print("\rFullscreen on\n");
+  } else {
+    isFullscreenActive = false;
+    // if immersive was active, exit that too so controls reappear
+    if (isAutohideActive) {
+      isAutohideActive = false;
+      hideTimer->stop();
     }
-    fflush(stdout);
+    showUI();
+    showNormal();
+    QTimer::singleShot(50, [this]() { refreshVideoRect(); });
+    g_print("\rFullscreen off\n");
+  }
+  fflush(stdout);
 }
 
-//after 3 seconds, toggle autohide. move the cursor to bring back toolbar
-//push f11 to disable autohide
+// after 3 seconds, toggle autohide. move the cursor to bring back toolbar
+// push f11 to disable autohide
 void VideoWindow::toggleAutohide() {
-    if (!isAutohideActive) {
-        isAutohideActive = true;
-        hideUI();
-        QTimer::singleShot(50, [this]() { refreshVideoRect(); });
-        g_print("\rAutohide on (move mouse to show UI)\n");
-    } else {
-        isAutohideActive = false;
-        hideTimer->stop();
-        showUI();
-        g_print("\rAutohide off\n");
-    }
+  if (!isAutohideActive) {
+    isAutohideActive = true;
+    hideUI();
     QTimer::singleShot(50, [this]() { refreshVideoRect(); });
-    fflush(stdout);
+    g_print("\rAutohide on (move mouse to show UI)\n");
+  } else {
+    isAutohideActive = false;
+    hideTimer->stop();
+    showUI();
+    g_print("\rAutohide off\n");
+  }
+  QTimer::singleShot(50, [this]() { refreshVideoRect(); });
+  fflush(stdout);
 }
 
 void VideoWindow::showUI() {
-    menuBar->setVisible(true);
-    statusLabel->setVisible(true);
-    toolbar->setVisible(true);
-    hideTimer->stop();
+  menuBar->setVisible(true);
+  statusLabel->setVisible(true);
+  toolbar->setVisible(true);
+  hideTimer->stop();
 }
 
 void VideoWindow::hideUI() {
-    if (!isAutohideActive)
-        return;
-    menuBar->setVisible(false);
-    statusLabel->setVisible(false);
-    toolbar->setVisible(false);
-    //timecodeLabel kept.
+  if (!isAutohideActive)
+    return;
+  menuBar->setVisible(false);
+  statusLabel->setVisible(false);
+  toolbar->setVisible(false);
+  // timecodeLabel kept.
 }
 
 // mouse movement in immersive mode shows UI and resets the hide timer
 void VideoWindow::mouseMoveEvent(QMouseEvent *event) {
-    QWidget::mouseMoveEvent(event);
-    if (isAutohideActive) {
-        showUI();
-        hideTimer->start(3000);
-    }
+  QWidget::mouseMoveEvent(event);
+  if (isAutohideActive) {
+    showUI();
+    hideTimer->start(3000);
+  }
 }

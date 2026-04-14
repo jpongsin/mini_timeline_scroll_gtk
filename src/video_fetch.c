@@ -13,42 +13,6 @@
 const double fps29 = 30000.0 / 1001.0;
 const double fps59 = 60000.0 / 1001.0;
 
-double validateVideo(const char *videoFile, AVFormatContext *fic, int videoStreamIndex) {
-    //else... run
-    printf("Loading: %s \n", videoFile);
-
-    //check if video is supported
-    if (avformat_open_input(&fic, videoFile,NULL,NULL)) {
-        printf("Could not open video file. Exiting.\n");
-        exit(-1);
-    }
-
-    //check if video has stream information
-    if (avformat_find_stream_info(fic,NULL) < 0) {
-        avformat_close_input(&fic);
-        printf("Could not find stream information. Exiting.\n");
-        exit(-1);
-    }
-
-    //find all known streams from video to audio...
-    for (int i = 0; i < fic->nb_streams; i++) {
-        if (fic->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
-            videoStreamIndex = i;
-            break;
-        }
-    }
-
-    //if outside the index....
-    if (videoStreamIndex == -1) {
-        printf("Could not find video stream. Exiting.\n");
-        avformat_close_input(&fic);
-        exit(-1);
-    }
-
-    //fetch video info
-    return fetchVideoInfo(fic, videoStreamIndex);
-}
-
 double fetchVideoInfo(const AVFormatContext *fic, int videoStreamIndex) {
     //proceed to calculate
     AVCodecParameters *pCodecPar = fic->streams[videoStreamIndex]->codecpar;
@@ -85,4 +49,91 @@ double fetchVideoInfo(const AVFormatContext *fic, int videoStreamIndex) {
     printf(timecode_format, hours, minutes, seconds, framesMod);
 
     return frame_rate;
+}
+
+VideoMediaInfo load_video_for_qt(const char *videoFile) {
+    VideoMediaInfo info = {0};
+    AVFormatContext *fic = NULL;
+
+    printf("Loading via QT interface: %s \n", videoFile);
+    if (avformat_open_input(&fic, videoFile, NULL, NULL)) {
+        printf("Could not open video file. Exiting.\n");
+        return info;
+    }
+
+    if (avformat_find_stream_info(fic, NULL) < 0) {
+        avformat_close_input(&fic);
+        printf("Could not find stream information. Exiting.\n");
+        return info;
+    }
+
+    // Process video stream for timecode calculation and FPS
+    int videoStreamIndex = -1;
+    for (unsigned int i = 0; i < fic->nb_streams; i++) {
+        if (fic->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+            videoStreamIndex = (int)i;
+            break;
+        }
+    }
+
+    if (videoStreamIndex != -1) {
+        info.fps = fetchVideoInfo(fic, videoStreamIndex);
+    }
+
+    // Process audio streams
+    int audio_count = 0;
+    for (unsigned int i = 0; i < fic->nb_streams; i++) {
+        if (fic->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+            audio_count++;
+        }
+    }
+
+    info.audio_count = audio_count;
+    if (audio_count > 0) {
+        info.audio_tracks = malloc(sizeof(AudioTrackInfo) * audio_count);
+
+        int track_idx = 0;
+        int track_num = 1;
+        for (unsigned int i = 0; i < fic->nb_streams; i++) {
+            if (fic->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+                AVDictionaryEntry *lang = av_dict_get(fic->streams[i]->metadata, "language", NULL, 0);
+                AVDictionaryEntry *title = av_dict_get(fic->streams[i]->metadata, "title", NULL, 0);
+
+                char buffer[512] = {0};
+                if (title && strlen(title->value) > 0) {
+                    snprintf(buffer, sizeof(buffer), "%s", title->value);
+                } else {
+                    snprintf(buffer, sizeof(buffer), "Track %d", track_num);
+                }
+
+                if (lang && strlen(lang->value) > 0) {
+                    snprintf(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), " (%s)", lang->value);
+                }
+
+                info.audio_tracks[track_idx].index = track_idx; // UI combobox data
+                info.audio_tracks[track_idx].label = strdup(buffer);
+                
+                track_idx++;
+                track_num++;
+            }
+        }
+    }
+
+    avformat_close_input(&fic);
+    return info;
+}
+
+void free_video_media_info(VideoMediaInfo *info) {
+    //audio track exists?
+    if (info->audio_tracks) {
+        //free memory of audio tracks once used up.
+        for (int i = 0; i < info->audio_count; i++) {
+            if (info->audio_tracks[i].label) {
+                free(info->audio_tracks[i].label);
+            }
+        }
+        free(info->audio_tracks);
+        info->audio_tracks = NULL;
+    }
+    info->audio_count = 0;
 }

@@ -8,13 +8,9 @@
 #include "../include/video_fetch.h"
 #include "../include/video_viewscaling.h"
 
-VideoWindow::VideoWindow(int argc, char *argv[], QWidget *parent){
+VideoWindow::VideoWindow(int argc, char *argv[], QWidget *parent):QWidget(parent){
   // initialize for preparing fullscreen and immersive mode
   init_screen();
-
-  player = {0};
-  player.use_hw_accel = -1;
-  player.selected_audio_stream = 0;
 
   setWindowTitle("Mini Timeline View");
   resize(800, 600);
@@ -77,17 +73,7 @@ VideoWindow::VideoWindow(int argc, char *argv[], QWidget *parent){
     if (!player.uri)
       return;
     player.selected_audio_stream = audioBox->itemData(index).toInt();
-    gint64 saved_pos = 0;
-    if (player.pipeline)
-      gst_element_query_position(player.pipeline, GST_FORMAT_TIME, &saved_pos);
-    load_new_video(QString(player.uri));
-    QTimer::singleShot(400, [this, saved_pos]() {
-      if (saved_pos > 0 && player.pipeline)
-        gst_element_seek_simple(
-            player.pipeline, GST_FORMAT_TIME,
-            (GstSeekFlags)(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT),
-            saved_pos);
-    });
+    switch_audio_stream(&player, player.selected_audio_stream);
   });
 
   connect(hwAccelBox, &QCheckBox::toggled, [this](bool checked) {
@@ -139,9 +125,31 @@ VideoWindow::VideoWindow(int argc, char *argv[], QWidget *parent){
   }
 }
 void VideoWindow::init_screen() {
+  //handle qwidget obligation
   isFullscreenActive = false;
   isAutohideActive = false;
   hideTimer = nullptr;
+
+  //properly setup player
+  player = {nullptr,
+    nullptr,
+    0,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    0.0,
+    false,
+    false,
+    false,
+    false,
+    0.0,
+    0,
+    nullptr,
+    nullptr,
+    -1,
+    0,
+    0};
 }
 
 void VideoWindow::mainFileMenu(QMenuBar *menuBar) {

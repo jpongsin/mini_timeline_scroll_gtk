@@ -15,7 +15,7 @@
 
 // explicitly prioritize nvidia if there are any
 void boost_nvidia_ranks() {
-  GstRegistry *registry = gst_registry_get();
+  //GstRegistry *registry = gst_registry_get();
   // check nvidia hardware decoders
   const gchar *nv_decoders[] = {"nvh264dec", "nvh265dec", "nvvp9dec",
                                 "nvjpegdec"};
