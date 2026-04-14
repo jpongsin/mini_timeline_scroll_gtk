@@ -62,6 +62,9 @@ add_executable(mini_timeline_scroll ${EXE_TYPE}
 if(NVIDIA_FOUND)
     target_compile_definitions(mini_timeline_scroll PRIVATE __NVIDIA__)
 endif()
+
+target_compile_options(mini_timeline_scroll PRIVATE "-Wall" "-Wextra")
+
 target_link_libraries(mini_timeline_scroll PRIVATE
         Qt6::Core
         Qt6::Gui
