@@ -20,7 +20,7 @@ case "$OS" in
         sudo apt update
         # FFmpeg & Build Essentials
         sudo apt install -y build-essential cmake pkg-config \
-            libxkbcommon-dev libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
+            libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
         # GStreamer (Base + App + Video)
         sudo apt install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
         # Qt6
@@ -40,8 +40,6 @@ case "$OS" in
         sudo zypper install -y gstreamer-devel gstreamer-plugins-base-devel
         # Qt6
         sudo zypper install -y qt6-base-devel qt6-widgets-devel
-        sudo zypper install -y opi
-        sudo opi codecs
         ;;
     arch)
         echo "Installing for Arch Linux..."
@@ -79,7 +77,7 @@ case "$OS" in
             exit 1
         fi
         # install everything at once
-        brew install cmake pkg-config ffmpeg gstreamer gst-plugins-base qt6
+        brew install cmake pkg-config ffmpeg gstreamer gst-plugins-base qt6 vulkan-headers
         ;;
     *)
         echo "OS '$OS' is not yet supported by this script."
