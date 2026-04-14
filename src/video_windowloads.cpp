@@ -288,3 +288,80 @@ void VideoWindow::export_screenshot() {
                              tr(export_result_string(result)));
     }
 }
+
+// force gstreamer overlay to fill the canvas after certain actions
+void VideoWindow::refreshVideoRect() {
+    if (player.video_sink && videoSurface) {
+        gst_video_overlay_set_render_rectangle(GST_VIDEO_OVERLAY(player.video_sink),
+                                               0, 0, videoSurface->width(),
+                                               videoSurface->height());
+        gst_video_overlay_expose(GST_VIDEO_OVERLAY(player.video_sink));
+    }
+}
+
+// windowed fullscreen
+void VideoWindow::toggleFullscreen() {
+    if (!isFullscreenActive) {
+        isFullscreenActive = true;
+        showFullScreen();
+        // give Qt one event loop tick to finish resizing the window
+        // before telling GStreamer the new rectangle
+        QTimer::singleShot(50, [this]() { refreshVideoRect(); });
+        g_print("\rFullscreen on\n");
+    } else {
+        isFullscreenActive = false;
+        // if immersive was active, exit that too so controls reappear
+        if (isAutohideActive) {
+            isAutohideActive = false;
+            hideTimer->stop();
+        }
+        showUI();
+        showNormal();
+        QTimer::singleShot(50, [this]() { refreshVideoRect(); });
+        g_print("\rFullscreen off\n");
+    }
+    fflush(stdout);
+}
+
+//after 3 seconds, toggle autohide. move the cursor to bring back toolbar
+//push f11 to disable autohide
+void VideoWindow::toggleAutohide() {
+    if (!isAutohideActive) {
+        isAutohideActive = true;
+        hideUI();
+        QTimer::singleShot(50, [this]() { refreshVideoRect(); });
+        g_print("\rAutohide on (move mouse to show UI)\n");
+    } else {
+        isAutohideActive = false;
+        hideTimer->stop();
+        showUI();
+        g_print("\rAutohide off\n");
+    }
+    QTimer::singleShot(50, [this]() { refreshVideoRect(); });
+    fflush(stdout);
+}
+
+void VideoWindow::showUI() {
+    menuBar->setVisible(true);
+    statusLabel->setVisible(true);
+    toolbar->setVisible(true);
+    hideTimer->stop();
+}
+
+void VideoWindow::hideUI() {
+    if (!isAutohideActive)
+        return;
+    menuBar->setVisible(false);
+    statusLabel->setVisible(false);
+    toolbar->setVisible(false);
+    //timecodeLabel kept.
+}
+
+// mouse movement in immersive mode shows UI and resets the hide timer
+void VideoWindow::mouseMoveEvent(QMouseEvent *event) {
+    QWidget::mouseMoveEvent(event);
+    if (isAutohideActive) {
+        showUI();
+        hideTimer->start(3000);
+    }
+}

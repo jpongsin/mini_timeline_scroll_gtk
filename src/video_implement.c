@@ -170,6 +170,8 @@ void init_video_processor(VideoPlayer *player, const char *path) {
     // video: queue -> convert
     player->video_entry = gst_element_factory_make("queue", "v_queue");
     GstElement *v_conv = gst_element_factory_make("videoconvert", "v_conv");
+    player->zcrop = gst_element_factory_make("videocrop", "zcrop");
+
     GstElement *v_out_queue = NULL;
     GstElement *v_upload = NULL;
     GstElement *v_color = NULL;
@@ -237,7 +239,7 @@ void init_video_processor(VideoPlayer *player, const char *path) {
     // Always the same — add unconditionally
     gst_bin_add_many(GST_BIN(player->pipeline),
                      src, dbin,
-                     player->video_entry, v_conv,
+                     player->video_entry, v_conv, player->zcrop,
                      NULL);
 
     // Sink-type specific middle elements only
@@ -261,17 +263,18 @@ void init_video_processor(VideoPlayer *player, const char *path) {
 
     //dynamically linking video
     if (sink_type == SINK_GL) {
-        gst_element_link_many(player->video_entry, v_conv,
+        gst_element_link_many(player->video_entry, v_conv, player->zcrop,
                               v_upload, v_color, player->video_sink, NULL);
     } else if (sink_type == SINK_OSX) {
-        gst_element_link_many(player->video_entry, v_conv,
+        gst_element_link_many(player->video_entry, v_conv, player->zcrop,
                               player->video_sink, NULL);
     } else {
         GstCaps *xv_caps = gst_caps_from_string(
             "video/x-raw, format=YV12, pixel-aspect-ratio=1/1"
         );
         gst_element_link(player->video_entry, v_conv);
-        gst_element_link_filtered(v_conv, v_out_queue, xv_caps);
+        gst_element_link(v_conv, player->zcrop);
+        gst_element_link_filtered( player->zcrop, v_out_queue, xv_caps);
         gst_element_link(v_out_queue, player->video_sink);
         gst_caps_unref(xv_caps);
     }
@@ -297,6 +300,7 @@ void set_video_window(VideoPlayer *player, unsigned long window_id) {
 //show test card
 void init_idle_pipeline(VideoPlayer *player) {
     player->pipeline = gst_pipeline_new("idle-pipeline");
+    player->zcrop = NULL; 
 
     GstBus *bus = gst_pipeline_get_bus(GST_PIPELINE(player->pipeline));
     gst_bus_set_sync_handler(bus, bus_sync_handler, player, NULL);

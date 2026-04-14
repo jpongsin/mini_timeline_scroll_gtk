@@ -31,6 +31,33 @@ void boost_nvidia_ranks() {
     }
   }
 }
+
+// check h265/hevc decoder availability and report if available.
+static bool check_premium_formats() {
+  const gchar *h265_decoders[] = {
+    "nvh265dec",    // nvidia
+    "vaapih265dec", // vaapi: intel/amd
+    "vtdec",        // vtdec: apple
+    "avdec_h265",   // gstreamer libav
+    "openh265dec",  // openh265
+};
+
+  for (int i = 0; i < 5; i++) {
+    GstElementFactory *f = gst_element_factory_find(h265_decoders[i]);
+    if (f) {
+      gst_object_unref(f);
+      g_print("H.265 decoder found: %s\n", h265_decoders[i]);
+      g_print("Status: Ready for premium formats\n");
+      return true;
+    }
+  }
+
+  g_print("Status: Free formats only\n");
+  g_print("H.265/HEVC not available. Install gstreamer-libav or\n"
+          "gstreamer1-plugins-bad for software decoding, or ensure\n"
+          "hardware decoder plugins are present.\n");
+  return false;
+}
 // wrapper for app to reinforce hotkeys
 class HotkeyApp : public QApplication {
 public:
@@ -42,10 +69,10 @@ public:
 
   // if a hotkey was pressed while videowin is active
   // ensure the keys are accepted
-  bool notify(QObject *receiver, QEvent *event) override {
+bool notify(QObject *receiver, QEvent *event) override {
     if (event->type() == QEvent::KeyPress && videoWin) {
-      QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
-      if (handle_hotkeys(keyEvent, &videoWin->player, videoWin)) {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+        if (handle_hotkeys(keyEvent, &videoWin->player, videoWin)) {
         event->accept();
         return true;
       }
@@ -71,6 +98,8 @@ int main(int argc, char *argv[]) {
 #ifdef __linux__
   XInitThreads();
 #endif
+  check_premium_formats();
+
   HotkeyApp a(argc, argv);
 
   //  set color of app
@@ -90,7 +119,7 @@ int main(int argc, char *argv[]) {
   darkPalette.setColor(QPalette::HighlightedText, Qt::black);
 
   a.setPalette(darkPalette);
-  // ---------------------------
+  //
 
   VideoWindow window(argc, argv);
   a.videoWin = &window;
