@@ -76,7 +76,7 @@ jobs:
           exit 1
         fi
     
-        DOWNLOAD_URL="https://sourceforge.net{LIBMPV_FILE}/download"
+        DOWNLOAD_URL="https://sourceforge.net${LIBMPV_FILE}/download"
         echo "Downloading from: $DOWNLOAD_URL"
         curl -L "$DOWNLOAD_URL" -o mpv-dev.7z
         
