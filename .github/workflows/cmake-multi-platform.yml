@@ -66,11 +66,10 @@ jobs:
       if: runner.os == 'Windows'
       shell: bash
       run: |
-        # Ensure you use the 'mpv-dev' prefix for the library development files
         VERSION="mpv-dev-x86_64-v3-20260412-git-062f4bf.7z"
         
         echo "Downloading libmpv from SourceForge..."
-        curl -L -o libmpv.7z "https://sourceforge.net"
+        curl -L -o libmpv.7z "https://sourceforge.net/projects/mpv-player-windows/files/libmpv/${VERSION}/download"
         
         echo "Extracting with 7-Zip..."
         7z x libmpv.7z -o./mpv
