@@ -15,26 +15,26 @@ and the hotkeys on the top of screen.
 
 #### Requirements:
 * ffmpeg >= 6
-* gstreamer >= 1.24
+* libmpv
 * Qt >= 6.10 
 * Homebrew (MacOS only)
-* CMake >= 4.2
+* CMake >= 3
 
 #### Instructions: 
 1. Run ./dependency.sh to install dependencies. 
 2. Run ./make_timeline_scroll.sh. 
 3. Go to /build. You will find an executable app "mini_timeline_scroll"
 4. Click "mini_timeline_scroll". Make sure to tick "Executable as Program" in Properties.
-5. You may also type "./timeline_scroll_Qt video_name.mov" to open video instantly.
+5. You may also type "./mini_timeline_scroll video_name.mov" to open video instantly.
 
 #### How to Operate:
 This program is designed primarily for keyboards.
 You will have to rely on the following key shortcuts: 
 
 to use playback:
-* j/shift+left arrow (<-). step backward 10 frame 
+* j/shift+left arrow (<-). step backward 5 seconds
 * k and spacebar. play and pause 
-* l/shift+right arrow (->). step forward 10 frame 
+* l/shift+right arrow (->). step forward 5 seconds
 * left arrow (<-). step -1 frame 
 * right arrow (->). step +1 frame
 * home key (HOME). rewind to beginning
@@ -49,6 +49,7 @@ to change volume:
 * m. mute/unmute
 
 to zoom a video:
+* i, reset zoom
 * o, zoom out
 * p, zoom in
 * w, scroll to top while zooming
@@ -70,6 +71,5 @@ You can also use the mouse to navigate the file menu. There will be clickable fe
 * For laptop with mixed graphics (e.g. Intel + NVIDIA): If you want to get the most performance, run "Performance Mode", or prime-run, or add an offload prefix.
 * Maximum streamable file reportedly is 8K 30fps.
 * May not cooperate with high bitrates at all.
-* In practice, this program plays mostly in free formats and SDR. There will be proper ways to detect proprietary formats, prioritize it, and implement it.
-
+* 
 Copyright (C) 2026 jpongsin
