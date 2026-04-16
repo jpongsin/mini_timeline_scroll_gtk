@@ -144,14 +144,21 @@ jobs:
             curl -L -o AppDir/usr/share/icons/hicolor/256x256/apps/mini_timeline_scroll.png \
             "https://raw.githubusercontent.com/jpongsin/mini_timeline_scroll/refs/heads/main/assets/mini_timeline_icon.png"
     
-          export QMAKE=$(which qmake6 || which qmake)
-          export QMAKE_PATH=$(dirname "$QMAKE")
-          OUTPUT=mini_timeline_scroll-linux.AppImage \
-          ./linuxdeploy --appdir AppDir \
-            --plugin qt \
-            --output appimage \
-            -e build/mini_timeline_scroll \
-            --executable build/mini_timeline_scroll
+              export QMAKE=$(which qmake6 || which qmake)
+              export QMAKE_PATH=$(dirname "$QMAKE")
+              echo "QMAKE: $QMAKE"
+              echo "QMAKE_PATH: $QMAKE_PATH"
+              echo "Files in current dir:"
+              ls -la
+              echo "Running linuxdeploy..."
+              ./linuxdeploy --appdir AppDir \
+                --plugin qt \
+                --output appimage \
+                -e build/mini_timeline_scroll \
+                --executable build/mini_timeline_scroll
+              echo "Linuxdeploy exit code: $?"
+              echo "Files after linuxdeploy:"
+              ls -la *.AppImage 2>/dev/null || echo "No AppImage found"
 
     # windows zip
     - name: Package (Windows ZIP)
