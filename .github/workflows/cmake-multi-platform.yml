@@ -39,13 +39,6 @@ jobs:
       uses: jurplel/install-qt-action@v3
       with:
         version: '6.3.0'
-    #install vulkan
-    - name: Install Vulkan SDK
-      uses: humbletim/setup-vulkan-action@v1
-      with:
-        vulkan-query-version: 'latest'
-        vulkan-components: 'Vulkan-Headers, Vulkan-Loader'
-        vulkan-use-cache: true
         
     #unix dependencies
     - name: Install Dependencies
