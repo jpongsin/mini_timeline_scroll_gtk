@@ -121,44 +121,49 @@ jobs:
       shell: bash
       run: |
         # Download linuxdeploy + Qt plugin
-          curl -L -o linuxdeploy https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-          curl -L -o linuxdeploy-plugin-qt https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
-          chmod +x linuxdeploy linuxdeploy-plugin-qt
+        curl -L -o linuxdeploy https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+        curl -L -o linuxdeploy-plugin-qt https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+        chmod +x linuxdeploy linuxdeploy-plugin-qt
     
-          #app dir structure
-          mkdir -p AppDir/usr/bin
-          cp build/mini_timeline_scroll AppDir/usr/bin/
+        # App dir structure
+        mkdir -p AppDir/usr/bin
+        cp build/mini_timeline_scroll AppDir/usr/bin/
     
-          # desktop and icon
-          mkdir -p AppDir/usr/share/applications
-          mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
-          cat > AppDir/usr/share/applications/mini_timeline_scroll.desktop << EOF
-            [Desktop Entry]
-            Name=Mini Timeline Scroll
-            Exec=mini_timeline_scroll
-            Icon=mini_timeline_scroll
-            Type=Application
-            Categories=Utility;
-          EOF
-          convert -size 256x256 xc:transparent AppDir/usr/share/icons/hicolor/256x256/apps/mini_timeline_scroll.png 2>/dev/null || \
-            curl -L -o AppDir/usr/share/icons/hicolor/256x256/apps/mini_timeline_scroll.png \
+        # Desktop and icon
+        mkdir -p AppDir/usr/share/applications
+        mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
+        
+        cat > AppDir/usr/share/applications/mini_timeline_scroll.desktop << 'EOF'
+        [Desktop Entry]
+        Name=Mini Timeline Scroll
+        Exec=mini_timeline_scroll
+        Icon=mini_timeline_scroll
+        Type=Application
+        Categories=Utility;
+        EOF
+        
+        # Create or download icon
+        if command -v convert &> /dev/null; then
+          convert -size 256x256 xc:transparent AppDir/usr/share/icons/hicolor/256x256/apps/mini_timeline_scroll.png
+        else
+          curl -L -o AppDir/usr/share/icons/hicolor/256x256/apps/mini_timeline_scroll.png \
             "https://raw.githubusercontent.com/jpongsin/mini_timeline_scroll/refs/heads/main/assets/mini_timeline_icon.png"
+        fi
     
-              export QMAKE=$(which qmake6 || which qmake)
-              export QMAKE_PATH=$(dirname "$QMAKE")
-              echo "QMAKE: $QMAKE"
-              echo "QMAKE_PATH: $QMAKE_PATH"
-              echo "Files in current dir:"
-              ls -la
-              echo "Running linuxdeploy..."
-              ./linuxdeploy --appdir AppDir \
-                --plugin qt \
-                --output appimage \
-                -e build/mini_timeline_scroll \
-                --executable build/mini_timeline_scroll
-              echo "Linuxdeploy exit code: $?"
-              echo "Files after linuxdeploy:"
-              ls -la *.AppImage 2>/dev/null || echo "No AppImage found"
+        export QMAKE=$(which qmake6 || which qmake)
+        export QMAKE_PATH=$(dirname "$QMAKE")
+        echo "QMAKE: $QMAKE"
+        echo "QMAKE_PATH: $QMAKE_PATH"
+        echo "Files in current dir:"
+        ls -la
+        echo "Running linuxdeploy..."
+        ./linuxdeploy --appdir AppDir \
+          --plugin qt \
+          --output appimage \
+          --executable build/mini_timeline_scroll
+        echo "Linuxdeploy exit code: $?"
+        echo "Files after linuxdeploy:"
+        ls -la *.AppImage 2>/dev/null || echo "No AppImage found"
 
     # windows zip
     - name: Package (Windows ZIP)
