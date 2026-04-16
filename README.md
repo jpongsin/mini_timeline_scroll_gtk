@@ -71,5 +71,5 @@ You can also use the mouse to navigate the file menu. There will be clickable fe
 * For laptop with mixed graphics (e.g. Intel + NVIDIA): If you want to get the most performance, run "Performance Mode", or prime-run, or add an offload prefix.
 * Maximum streamable file reportedly is 8K 30fps.
 * May not cooperate with high bitrates at all.
-* 
+
 Copyright (C) 2026 jpongsin
