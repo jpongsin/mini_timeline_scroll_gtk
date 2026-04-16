@@ -23,6 +23,7 @@ else()
 endif()
 
 add_executable(mini_timeline_scroll src/main.cpp
+        WIN32 MACOSX_BUNDLE
         include/video_backend.h
         include/VideoWidget.h
         src/VideoWidget.cpp
@@ -48,4 +49,14 @@ target_link_libraries(mini_timeline_scroll PRIVATE
     Qt6::OpenGLWidgets
     ${MPV_LINKLIB})
 
+if(APPLE)
+    set_target_properties(mini_timeline_scroll PROPERTIES
+        MACOSX_BUNDLE_GUI_IDENTIFIER "com.github.jpongsin.mini-timeline-scroll"
+        MACOSX_BUNDLE_BUNDLE_NAME "mini_timeline_scroll"
+        MACOSX_BUNDLE_BUNDLE_VERSION "1.0"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0"
+        MACOSX_BUNDLE TRUE
+        WIN32_EXECUTABLE TRUE
+    )
+endif()
 
