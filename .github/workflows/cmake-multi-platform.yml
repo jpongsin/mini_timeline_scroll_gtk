@@ -16,14 +16,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        #os: [ubuntu-latest, windows-latest, macos-latest]
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         build_type: [Release]
         # Include specific compiler pairings for each OS
         include:
-          #- os: windows-latest
-            #c_compiler: cl
-            #cpp_compiler: cl
+          - os: windows-latest
+            c_compiler: gcc
+            cpp_compiler: g++
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
@@ -63,25 +62,25 @@ jobs:
       shell: bash
 
     #windows
-    #- name: Install pkg-config (Windows)
-      #if: runner.os == 'Windows'
-      #run: |
-        #choco install pkgconfiglite -y
+    - name: Install pkg-config (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        choco install pkgconfiglite -y
     
-    #- name: Install libmpv, Windows
-      #if: runner.os == 'Windows'
-      #shell: bash
-      #run: |
-        #VERSION="mpv-dev-x86_64-v3-20260412-git-062f4bf.7z"
+    - name: Install libmpv, Windows
+      if: runner.os == 'Windows'
+      shell: bash
+      run: |
+        VERSION="mpv-dev-x86_64-v3-20260412-git-062f4bf.7z"
         
-        #echo "Downloading libmpv from SourceForge..."
-        #curl -L -o libmpv.7z "https://sourceforge.net/projects/mpv-player-windows/files/libmpv/${VERSION}/download"
+        echo "Downloading libmpv from SourceForge..."
+        curl -L -o libmpv.7z "https://sourceforge.net/projects/mpv-player-windows/files/libmpv/${VERSION}/download"
         
-        #echo "Extracting with 7-Zip..."
-        #7z x libmpv.7z -o./mpv
+        echo "Extracting with 7-Zip..."
+        7z x libmpv.7z -o./mpv
         
-        #echo "$(pwd)/mpv" >> $GITHUB_PATH
-        #echo "LIBMPV_PATH=$(pwd)/mpv" >> $GITHUB_ENV
+        echo "$(pwd)/mpv" >> $GITHUB_PATH
+        echo "LIBMPV_PATH=$(pwd)/mpv" >> $GITHUB_ENV
         
 
     - name: Configure CMake
