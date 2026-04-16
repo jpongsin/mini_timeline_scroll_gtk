@@ -66,19 +66,11 @@ jobs:
       if: runner.os == 'Windows'
       shell: bash
       run: |
-        SEARCH_URL="https://sourceforge.net/projects/mpv-player-windows/files/libmpv/"
+        VERSION="mpv-x86_64-v3-20260412-git-062f4bf.7z"
+        URL="https://sourceforge.net{VERSION}/download"
         
-        LIBMPV_FILE=$(curl -sL "$SEARCH_URL" | grep -om1 "mpv-dev-x86_64-[0-9a-z-]*\.7z" | head -n 1) || true
-        
-        if [ -z "$LIBMPV_FILE" ]; then
-          echo "Error: libmpv version not found at $SEARCH_URL"
-          exit 1
-        fi
-
-        DOWNLOAD_URL="https://sourceforge.net{LIBMPV_FILE}/download"
-        echo "Downloading from: $DOWNLOAD_URL"
-        
-        curl -L "$DOWNLOAD_URL" -o mpv-dev.7z
+        echo "Downloading: $URL"
+        curl -L "$URL" -o mpv-dev.7z
         
         7z x mpv-dev.7z -o"${{ github.workspace }}/mpv-dev" -y
         echo "mpv_DIR=${{ github.workspace }}/mpv-dev" >> $GITHUB_ENV
