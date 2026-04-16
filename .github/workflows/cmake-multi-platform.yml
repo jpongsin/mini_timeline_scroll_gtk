@@ -62,6 +62,11 @@ jobs:
       shell: bash
 
     #windows
+    - name: Install pkg-config (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        choco install pkgconfiglite -y
+    
     - name: Install libmpv, Windows
       if: runner.os == 'Windows'
       shell: bash
