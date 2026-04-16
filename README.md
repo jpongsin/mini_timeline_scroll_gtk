@@ -68,9 +68,8 @@ You can also use the mouse to navigate the file menu. There will be clickable fe
 
 #### Notes:
 * Prototype. It is recommmended to do a fresh build as versions of ffmpeg and its libraries are not backwards compatible.
-* No native Wayland support. Limited to Xwayland.
+* X11 and Wayland tested
 * For laptop with mixed graphics (e.g. Intel + NVIDIA): If you want to get the most performance, run "Performance Mode", or prime-run, or add an offload prefix.
 * Maximum streamable file reportedly is 8K 30fps.
-* May not cooperate with high bitrates at all.
 
 Copyright (C) 2026 jpongsin
