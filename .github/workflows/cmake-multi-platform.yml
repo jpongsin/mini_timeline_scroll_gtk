@@ -67,8 +67,8 @@ jobs:
       shell: bash
       run: |
         VERSION="mpv-x86_64-v3-20260412-git-062f4bf.7z"
-        URL="https://sourceforge.net{VERSION}/download"
-        
+        URL="https://sourceforge.net/projects/mpv-winbuilder/files/stable/${VERSION}/download"
+            
         echo "Downloading: $URL"
         curl -L "$URL" -o mpv-dev.7z
         
