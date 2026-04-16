@@ -68,7 +68,7 @@ You can also use the mouse to navigate the file menu. There will be clickable fe
 
 #### Notes:
 * Prototype. It is recommmended to do a fresh build as versions of ffmpeg and its libraries are not backwards compatible.
-* X11 and Wayland tested
+* X11, Wayland and Cocoa tested
 * For laptop with mixed graphics (e.g. Intel + NVIDIA): If you want to get the most performance, run "Performance Mode", or prime-run, or add an offload prefix.
 * Maximum streamable file reportedly is 8K 30fps.
 
