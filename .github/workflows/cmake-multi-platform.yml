@@ -62,9 +62,13 @@ jobs:
       shell: bash
 
     #windows
-    - name: Install libmpv via vcpkg
+    - name: Install libmpv, Windows
       if: runner.os == 'Windows'
-      run: vcpkg install mpv
+      shell: bash
+      run: |
+        curl -L https://sourceforge.net -o mpv-dev.7z
+        7z x mpv-dev.7z -o${{ github.workspace }}/mpv-dev
+        echo "mpv_DIR=${{ github.workspace }}/mpv-dev" >> $GITHUB_ENV
 
 
     - name: Configure CMake
@@ -74,7 +78,7 @@ jobs:
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        ${{ runner.os == 'Windows' && '-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake' || '' }}
+        ${{ runner.os == 'Windows' && format('-Dmpv_DIR={0}/mpv-dev', github.workspace) || '' }}
         -S ${{ github.workspace }}
 
     - name: Build
