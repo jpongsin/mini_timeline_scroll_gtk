@@ -34,10 +34,30 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v4
 
+    #install Qt
     - name: Install Qt
       uses: jurplel/install-qt-action@v3
       with:
         version: '6.3.0'
+    #install vulkan
+    - name: Install Vulkan SDK
+      uses: humbletim/setup-vulkan-action@v1
+      with:
+        vulkan-query-version: 'latest'
+        vulkan-components: 'Vulkan-Headers, Vulkan-Loader'
+        vulkan-use-cache: true
+        
+    #unix dependencies
+    - name: Install Dependencies
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          sudo apt-get update
+          sudo apt-get install -y libmpv-dev
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          brew update
+          brew install mpv
+        fi
+      shell: bash
 
     - name: Configure CMake
       # Using -B for build directory and -S for source
