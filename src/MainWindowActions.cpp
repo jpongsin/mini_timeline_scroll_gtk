@@ -17,7 +17,15 @@ void MainWindow::openVideo() {
   //check for known formats
   QString fileName = QFileDialog::getOpenFileName(
       this, "Open Video", "",
-      "Video Files (*.mp4 *.mkv *.mov *.h265 *.hevc *.avi)");
+      "Video Files (*.mp4 *.mkv "
+      "*.mov *.avi "
+      "*.webm *.flv "
+      "*.vob *.ogv "
+      "*.ogg *.wmv "
+      "*.mpg *.mpeg "
+      "*.m4v *.3gp "
+      "*.3g2 *.mxf "
+      "*.f4v)");
 
   //confirm loading video...
   if (!fileName.isEmpty()) {
