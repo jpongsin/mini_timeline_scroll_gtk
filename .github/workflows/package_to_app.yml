@@ -177,7 +177,7 @@ jobs:
       if: runner.os == 'macOS'
       shell: bash
       run: |
-        mkdir -p mts_icon.iconset
+        mkdir -p mini_timeline_icon.iconset
         sips -z 16 16     assets/mini_timeline_icon.png --out mini_timeline_icon.iconset/icon_16x16.png
         sips -z 32 32     assets/mini_timeline_icon.png --out mini_timeline_icon.iconset/icon_16x16@2x.png
         sips -z 32 32     assets/mini_timeline_icon.png --out mini_timeline_icon.iconset/icon_32x32.png
@@ -187,7 +187,7 @@ jobs:
         sips -z 256 256   assets/mini_timeline_icon.png --out mini_timeline_icon.iconset/icon_256x256.png
         sips -z 512 512   assets/mini_timeline_icon.png --out mini_timeline_icon.iconset/icon_256x256@2x.png
         sips -z 512 512   assets/mini_timeline_icon.png --out mini_timeline_icon.iconset/icon_512x512.png
-        iconutil -c icns mts_icon.iconset -o assets/mts_icon.icns
+        iconutil -c icns mini_timeline_icon.iconset -o assets/mini_timeline_icon.icns
     
     #dmg
     - name: Package (macOS DMG)
