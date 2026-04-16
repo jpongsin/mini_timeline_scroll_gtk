@@ -22,8 +22,9 @@ else()
     pkg_check_modules(MPV REQUIRED IMPORTED_TARGET mpv)
 endif()
 
-add_executable(mini_timeline_scroll src/main.cpp
-        WIN32 MACOSX_BUNDLE
+if(APPLE)
+    add_executable(mini_timeline_scroll MACOSX_BUNDLE
+        src/main.cpp
         include/video_backend.h
         include/VideoWidget.h
         src/VideoWidget.cpp
@@ -31,7 +32,19 @@ add_executable(mini_timeline_scroll src/main.cpp
         src/MainWindow.cpp
         src/video_backend.c
         src/MainWindowActions.cpp
-)
+    )
+else()
+    add_executable(mini_timeline_scroll
+        src/main.cpp
+        include/video_backend.h
+        include/VideoWidget.h
+        src/VideoWidget.cpp
+        include/MainWindow.h
+        src/MainWindow.cpp
+        src/video_backend.c
+        src/MainWindowActions.cpp
+    )
+endif()
 
 target_compile_options(mini_timeline_scroll PRIVATE -Wall -Wextra -Wpedantic)
 
