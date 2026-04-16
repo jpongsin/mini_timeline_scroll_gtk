@@ -14,11 +14,12 @@ with the timecode on the bottom of screen
 and the hotkeys on the top of screen.
 
 #### Requirements:
-* ffmpeg >= 6
-* libmpv
-* Qt >= 6.10 
-* Homebrew (MacOS only)
 * CMake >= 3
+* Qt >= 6.10
+* libmpv
+* ffmpeg >= 6
+* Homebrew (MacOS only)
+
 
 #### Instructions: 
 1. Run ./dependency.sh to install dependencies. 
