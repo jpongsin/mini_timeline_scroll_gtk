@@ -10,7 +10,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets OpenGL OpenGLWidgets)
 
 if(WIN32)
     set(MPV_INCLUDE_DIR "${LIBMPV_PATH}/include")
-    set(MPV_LIBRARY "${LIBMPV_PATH}/mpv.lib")
+    set(MPV_LIBRARY "${LIBMPV_PATH}/libmpv.dll.a")
 
     add_library(mpv::mpv UNKNOWN IMPORTED)
     set_target_properties(mpv::mpv PROPERTIES
@@ -32,11 +32,7 @@ add_executable(mini_timeline_scroll src/main.cpp
         src/MainWindowActions.cpp
 )
 
-if(MSVC)
-    target_compile_options(mini_timeline_scroll PRIVATE /W4)
-else()
-    target_compile_options(mini_timeline_scroll PRIVATE -Wall -Wextra -Wpedantic)
-endif()
+target_compile_options(mini_timeline_scroll PRIVATE -Wall -Wextra -Wpedantic)
 
 if(WIN32)
     set(MPV_LINKLIB mpv::mpv)
