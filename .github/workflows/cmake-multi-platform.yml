@@ -40,6 +40,7 @@ jobs:
       uses: jurplel/install-qt-action@v4
       with:
         version: '6.3.0'
+        arch: ${{ runner.os == 'Windows' && 'win64_mingw' || '' }}
 
     #vulkan
     - name: Setup Vulkan SDK
@@ -62,41 +63,52 @@ jobs:
       shell: bash
 
     #windows
-    - name: Install pkg-config (Windows)
+    - name: Install MinGW (Windows)
       if: runner.os == 'Windows'
-      run: |
-        choco install pkgconfiglite -y
-    
-    - name: Install libmpv, Windows
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-pkg-config
+
+    - name: Add MinGW to path (Windows)
+      if: runner.os == 'Windows'
+      shell: bash
+      run: echo "C:/msys64/mingw64/bin" >> $GITHUB_PATH
+
+    # Windows: libmpv
+    - name: Install libmpv (Windows)
       if: runner.os == 'Windows'
       shell: bash
       run: |
         VERSION="mpv-dev-x86_64-v3-20260412-git-062f4bf.7z"
-        
-        echo "Downloading libmpv from SourceForge..."
+        echo "Downloading libmpv..."
         curl -L -o libmpv.7z "https://sourceforge.net/projects/mpv-player-windows/files/libmpv/${VERSION}/download"
-        
-        echo "Extracting with 7-Zip..."
+        echo "Extracting..."
         7z x libmpv.7z -o./mpv
-        
         echo "$(pwd)/mpv" >> $GITHUB_PATH
-        echo "LIBMPV_PATH=$(pwd)/mpv" >> $GITHUB_ENV
+        echo "LIBMPV_PATH=$(pwd -W)/mpv" >> $GITHUB_ENV
         
-
+    # Configure
     - name: Configure CMake
-      # Using -B for build directory and -S for source
-      run: >
-        cmake -B ${{ github.workspace }}/build
-        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -DLIBMPV_PATH=${{ github.workspace }}/mpv
-        -S ${{ github.workspace }}
+      shell: bash
+      run: |
+        GENERATOR="linux makefiles"
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          GENERATOR="minGW Makefiles"
+        fi
+        cmake -B "${{ github.workspace }}/build" \
+          -G "$GENERATOR" \
+          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
+          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+          -DLIBMPV_PATH="${LIBMPV_PATH:-}" \
+          -S "${{ github.workspace }}"
 
     - name: Build
-      # --config is required for multi-config generators like MSVC on Windows
+      shell: bash
       run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.build_type }}
 
     - name: Test
       working-directory: ${{ github.workspace }}/build
+      shell: bash
       run: ctest --build-config ${{ matrix.build_type }}
