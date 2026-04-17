@@ -41,7 +41,7 @@ to make previous versions available for comparison.
 
 ### Changed
 
-- Migrated from GTK to Qt6 to keep UI design consistent
+- Migrated from GTK to Qt6 to keep UI design consistent after successful build but botched runtime on MacOS from v0.0.0
   
 ### Removed
 
@@ -53,7 +53,7 @@ to make previous versions available for comparison.
 
 - GTK GUI in C++
 - Dark GUI style
-- gstreamer overlay in C
+- gstreamer overlay in C; original intent was to tailor video stream to multiple platforms, optimize for high resolution videos and make room for other features
 - Command line argument to play video e.g. "./mini_timeline_scroll sample.mov"
 - Keyboard hotkeys to trigger playback, scroll, mute, rewind back, and fullscreen
 - Carried over an ffmpeg metadata retrieval implementation from [repo metadata_fetch] and refactored main.c into video_fetch.c
