@@ -2,28 +2,26 @@
 ![A window opening, with a menu bar, file information and time code sandwiched between a video stream.](https://github.com/jpongsin/mini_timeline_scroll/blob/main/samples/mini_timeline_scroll_1.png)
 
 #### Description:
-This program takes a video file
-as an argument. When you pick the video file, the program
-will check if there is any information
-on the video.
-It then opens a screen.
-This program is written for Linux (>=6.8), FreeBSD (>=15), and MacOS(>=15).
+This program plays a video and supports zooming and panning the video as well as switching audio tracks and making screenshots.
+When pausing, you may analyze the frames and fast seek the loaded video, and restart to the beginning of the video.
+If you run via command line, you may also append the video and its directory after the first argument containing the app in your assigned directory.
+This program supports Linux (>=6.8), FreeBSD (>=15), and MacOS(>=15). Limited support for Windows 10 and up.
 
-The timecode and hotkey labels are shown on the window,
-with the timecode on the bottom of screen
-and the hotkeys on the top of screen.
+This design intentionally has little to none room for the mouse to keep things tactile. All hotkeys are mapped under the top menu from File thru Help.
+You may also see a bottom bar containing a scroll bar and a timecode.
 
 #### Requirements:
 * CMake >= 3
 * Qt >= 6.10
+* gcc and g++ >= 12
 * libmpv
 * ffmpeg >= 6
 * Homebrew (MacOS only)
-
+* MinGW (Windows only)
 
 #### Instructions: 
-1. Run ./dependency.sh to install dependencies. 
-2. Run ./make_timeline_scroll.sh. 
+1. Ensure that the dependencies are installed
+2. Run ./make_timeline_scroll.sh (tested on Linux and MacOS).
 3. Go to /build. You will find an executable app "mini_timeline_scroll"
 4. Click "mini_timeline_scroll". Make sure to tick "Executable as Program" in Properties.
 5. You may also type "./mini_timeline_scroll video_name.mov" to open video instantly.
