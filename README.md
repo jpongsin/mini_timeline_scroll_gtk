@@ -3,8 +3,8 @@
 
 #### Description:
 This program plays a video and supports zooming and panning the video as well as switching audio tracks and making screenshots.
-When pausing, you may analyze the frames and fast seek the loaded video, and restart to the beginning of the video.
-If you run via command line, you may also append the video and its directory after the first argument containing the app in your assigned directory.
+When pausing, you may analyze the frames and fast seek the loaded video, and restart to the beginning of the video.\
+If you run via command line, you may also append the video and its directory after the first argument containing the app in your assigned directory.\
 This program supports Linux (>=6.8), FreeBSD (>=15), and MacOS(>=15). Limited support for Windows 10 and up.
 
 This design intentionally has little to none room for the mouse to keep things tactile. All hotkeys are mapped under the top menu from File thru Help.
