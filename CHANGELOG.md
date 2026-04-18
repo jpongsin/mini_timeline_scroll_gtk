@@ -11,7 +11,7 @@ to make previous versions available for comparison.
 
 ### Changed
 - Fixed memory issues with libmpv metadata retrieval from importing video.
-- Refactored handling of audio and subtitle implementations in Qt GUI context and backend context for better troubleshooting
+- Refactored audio and subtitle implementations in Qt GUI context and backend context for better troubleshooting.
 
   
 ## [0.2.0] - 2026-04-17
@@ -82,7 +82,7 @@ to make previous versions available for comparison.
 - Carried over an ffmpeg metadata retrieval implementation from repo [jpongsin/metadata_fetch] and refactored source code into a retrieval task that returns fps information for the GUI to handle
 - Timecode on a GTK GUI to monitor video duration
 
-
+[0.3.0]: https://github.com/jpongsin/mini_timeline_scroll/compare/stable-0.3.0..stable
 [0.2.0]: https://github.com/jpongsin/mini_timeline_scroll/compare/stable..prototype
 [0.1.0]: https://github.com/jpongsin/mini_timeline_scroll/compare/prototype..legacy
 [jpongsin/metadata_fetch]: https://github.com/jpongsin/metadata_fetch
