@@ -97,9 +97,9 @@ to make previous versions available for comparison.
 - Carried over an ffmpeg metadata retrieval implementation from repo [jpongsin/metadata_fetch] and refactored source code into a retrieval task that returns fps information for the GUI to handle
 - Timecode on a GTK GUI to monitor video duration
 
-[0.3.1]: https://github.com/jpongsin/mini_timeline_scroll/compare/stable-0.3.1..stable-0.3.0
-[0.3.0]: https://github.com/jpongsin/mini_timeline_scroll/compare/stable-0.3.0..stable
-[0.2.0]: https://github.com/jpongsin/mini_timeline_scroll/compare/stable..prototype
-[0.1.0]: https://github.com/jpongsin/mini_timeline_scroll/compare/prototype..legacy
-[jpongsin/metadata_fetch]: https://github.com/jpongsin/metadata_fetch
+[0.3.1]: https://github.com/jpongsin/mini_timeline_scroll/compare/stable-0.3.0..stable-0.3.1
+[0.3.0]: https://github.com/jpongsin/mini_timeline_scroll/compare/stable..stable-0.3.0
+[0.2.0]: https://github.com/jpongsin/mini_timeline_scroll/compare/prototype..stable
+[0.1.0]: https://github.com/jpongsin/mini_timeline_scroll/compare/legacy..prototype
 [0.0.0]: https://github.com/jpongsin/mini_timeline_scroll/releases/tag/legacy
+[jpongsin/metadata_fetch]: https://github.com/jpongsin/metadata_fetch
